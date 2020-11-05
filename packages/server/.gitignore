@@ -1,1 +1,4 @@
 ormconfig.json
+
+# src
+!**/modules/logs
