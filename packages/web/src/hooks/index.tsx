@@ -1,11 +1,11 @@
 import React from 'react';
 
 import { AuthenticationProvider } from './authentication';
-import { TasksProvider } from './tasks';
+import { CustomersIXCProvider } from './customers_ixc';
 
 const AppProvider: React.FC = ({ children }) => (
   <AuthenticationProvider>
-    <TasksProvider>{children}</TasksProvider>
+    <CustomersIXCProvider>{children}</CustomersIXCProvider>
   </AuthenticationProvider>
 );
 

@@ -1,7 +1,7 @@
 import { getRepository, Repository } from 'typeorm';
 
-import ICreateCustomerIXCDTO from '@modules/customer_ixc/dtos/ICreateCustomerIXCDTO';
-import ICustomersIXCRepository from '@modules/customer_ixc/repositories/ICustomersIXCRepository';
+import ICreateCustomerIXCDTO from '@modules/customers_ixc/dtos/ICreateCustomerIXCDTO';
+import ICustomersIXCRepository from '@modules/customers_ixc/repositories/ICustomersIXCRepository';
 
 import CustomerIXC from '../entities/CustomerIXC';
 
@@ -17,9 +17,9 @@ class CustomersIXCRepository implements ICustomersIXCRepository {
   }
 
   public async findById(id: string): Promise<CustomerIXC | undefined> {
-    const task = await this.ormRepository.findOne(id);
+    const customerIxc = await this.ormRepository.findOne(id);
 
-    return task;
+    return customerIxc;
   }
 
   public async create(data: ICreateCustomerIXCDTO): Promise<CustomerIXC> {

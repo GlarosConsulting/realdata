@@ -23,7 +23,7 @@ class FakeCustomersIXCRepository implements ICustomersIXCRepository {
   public async create(data: ICreateCustomerIXCDTO): Promise<CustomerIXC> {
     const customerIxc = new CustomerIXC();
 
-    merge(customerIxc, { id: v4(), alerts: [] }, data);
+    merge(customerIxc, { id: v4() }, data);
 
     this.customersIxc.push(customerIxc);
 

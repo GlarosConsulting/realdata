@@ -1,13 +1,19 @@
-import React from 'react';
-import { FiPlus, FiUsers } from 'react-icons/fi';
+import { GetStaticProps } from 'next';
+import { useRouter } from 'next/router';
+import React, { useCallback, useMemo } from 'react';
+import { FiUsers } from 'react-icons/fi';
 import { Column } from 'react-table';
 
 import { Box, Button, Tooltip, useTheme } from '@chakra-ui/core';
+import { format, parseISO } from 'date-fns';
 
 import SEO from '@/components/SEO';
 import Sidebar from '@/components/Sidebar';
 import Table from '@/components/Table';
 import Title from '@/components/Title';
+import ILog from '@/interfaces/logs/ILog';
+import ILogFormatted from '@/interfaces/logs/ILogFormatted';
+import fetch from '@/lib/fetch';
 
 const COLUMNS = [
   {
@@ -24,23 +30,44 @@ const COLUMNS = [
   },
   {
     Header: 'Existia no Conta Azul',
-    accessor: 'existing',
+    accessor: 'conta_azul_existing_formatted',
   },
   {
     Header: 'Baixa realizada',
-    accessor: 'discharge_performed',
+    accessor: 'discharge_performed_formatted',
   },
 ] as Column[];
 
-const App: React.FC = () => {
+interface IAppProps {
+  logs: ILog[];
+}
+
+const App: React.FC<IAppProps> = ({ logs }) => {
   const theme = useTheme();
+
+  const router = useRouter();
+
+  const handleGoToCustomersIXC = useCallback(() => {
+    router.replace('/app/ixc');
+  }, []);
+
+  const formattedLogs = useMemo(
+    () =>
+      logs.map<ILogFormatted>(log => ({
+        ...log,
+        date_formatted: format(parseISO(log.date), 'dd/MM/yyyy'),
+        conta_azul_existing_formatted: log.conta_azul_existing ? 'Sim' : 'Não',
+        discharge_performed_formatted: log.discharge_performed ? 'Sim' : 'Não',
+      })),
+    [logs],
+  );
 
   return (
     <>
       <SEO
         title="Histórico"
         image="og/boost.png"
-        description="Histórico de ações"
+        description="Lista de histórico de ações"
       />
 
       <Sidebar
@@ -56,6 +83,7 @@ const App: React.FC = () => {
               _hover={{
                 bg: 'green.300',
               }}
+              onClick={handleGoToCustomersIXC}
             >
               <FiUsers size={theme.sizes[5]} color={theme.colors.white} />
             </Button>
@@ -67,37 +95,22 @@ const App: React.FC = () => {
         <Box>
           <Title>Histórico</Title>
 
-          <Table
-            columns={COLUMNS}
-            data={[
-              {
-                date_formatted: '01/01/2020',
-                ixc_id: '123',
-                projection_id: '321',
-                existing: 'Sim',
-                discharge_performed: 'Sim',
-              },
-              {
-                date_formatted: '11/01/2020',
-                ixc_id: '456',
-                projection_id: '654',
-                existing: 'Sim',
-                discharge_performed: 'Não',
-              },
-              {
-                date_formatted: '26/01/2020',
-                ixc_id: '789',
-                projection_id: '987',
-                existing: 'Sim',
-                discharge_performed: 'Sim',
-              },
-            ]}
-            pageSize={5}
-          />
+          <Table columns={COLUMNS} data={formattedLogs} pageSize={5} />
         </Box>
       </Box>
     </>
   );
+};
+
+export const getStaticProps: GetStaticProps<IAppProps> = async () => {
+  const response = await fetch<ILog[]>('/logs');
+
+  return {
+    props: {
+      logs: response.data,
+    },
+    revalidate: 10,
+  };
 };
 
 export default App;

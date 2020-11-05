@@ -50,7 +50,7 @@ const Login: React.FC = () => {
         duration: 3000,
       });
 
-      router.replace('/app/tasks');
+      router.replace('/app/logs');
     } catch (err) {
       if (err instanceof Yup.ValidationError) {
         const errors = getValidationErrors(err);
@@ -73,7 +73,7 @@ const Login: React.FC = () => {
   return (
     <>
       <SEO
-        title="Atena Gestor"
+        title="RealData"
         image="og/boost.png"
         shouldExcludeTitleSuffix
         description="Fazer login na plataforma"
