@@ -81,7 +81,7 @@
             "/^next/"
           ],
           "module",
-          "/^@scraper\/shared/",
+          "/^@robot\/shared/",
           "/^@config/",
           "/^@utils/",
           "/^@shared/",
@@ -135,6 +135,19 @@
         "types": {
           "object": false
         }
+      }
+    ],
+    "import/no-extraneous-dependencies": [
+      "error",
+      {
+        "devDependencies": true,
+        "packageDir": [
+          ".",
+          "packages/audit/server",
+          "packages/audit/web",
+          "packages/robot/_shared",
+          "packages/robot/main"
+        ]
       }
     ],
     "import/extensions": [

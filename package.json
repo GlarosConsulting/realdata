@@ -29,9 +29,10 @@
     "heroku-postbuild": "yarn server build",
     "build": "lerna run build --scope @realdata/* --stream",
     "lint:fix": "eslint --fix packages --ext ts,tsx",
-    "test": "lerna run test --scope @realdata/* --stream --parallel -- --watchAll false",
-    "web": "yarn workspace @realdata/web",
-    "server": "yarn workspace @realdata/server"
+    "test": "lerna run test --scope @realdata/audit-* --stream --parallel -- --watchAll false",
+    "audit:web": "yarn workspace @realdata/audit-web",
+    "audit:server": "yarn workspace @realdata/audit-server",
+    "robot:main": "yarn workspace @realdata/robot-main"
   },
   "lint-staged": {
     "packages/**/*.{ts,tsx}": [
