@@ -4,22 +4,26 @@ import PuppeteerBrowserProvider from '@robot/shared/modules/browser/providers/Br
 
 import ixcConfig from '@config/ixc';
 
+import OpenCustomerDetailsService from '@modules/ixc/customers/details/main/services/OpenCustomerDetailsService';
+import FindCustomerByFieldService from '@modules/ixc/customers/main/services/FindCustomerByFieldService';
+import NavigateToCustomersPageService from '@modules/ixc/customers/main/services/NavigateToCustomersPageService';
 import AuthenticateUserService from '@modules/ixc/login/services/AuthenticateUserService';
 import NavigateToLogInPageService from '@modules/ixc/login/services/NavigateToLogInPageService';
 
-import ExtractCustomersListService from './ExtractCustomersListService';
-import NavigateToCustomersPageService from './NavigateToCustomersPageService';
+import NavigateToFinanceTabService from './NavigateToFinanceTabService';
 
 let puppeteerBrowserProvider: PuppeteerBrowserProvider;
 let navigateToLogInPage: NavigateToLogInPageService;
 let authenticateUser: AuthenticateUserService;
 let navigateToCustomersPage: NavigateToCustomersPageService;
-let extractCustomersList: ExtractCustomersListService;
+let findCustomerByField: FindCustomerByFieldService;
+let openCustomerDetails: OpenCustomerDetailsService;
+let navigateToFinanceTab: NavigateToFinanceTabService;
 
 let browser: Browser;
 let page: Page;
 
-describe('FindCustomerByField', () => {
+describe('NavigateToFinanceTab', () => {
   beforeAll(async () => {
     puppeteerBrowserProvider = new PuppeteerBrowserProvider();
 
@@ -32,14 +36,16 @@ describe('FindCustomerByField', () => {
     navigateToLogInPage = new NavigateToLogInPageService(page);
     authenticateUser = new AuthenticateUserService(page);
     navigateToCustomersPage = new NavigateToCustomersPageService(page);
-    extractCustomersList = new ExtractCustomersListService(page);
+    findCustomerByField = new FindCustomerByFieldService(page);
+    openCustomerDetails = new OpenCustomerDetailsService(page);
+    navigateToFinanceTab = new NavigateToFinanceTabService(page);
   });
 
   afterAll(async () => {
     await browser.close();
   });
 
-  it('should be able to navigate to customers page', async () => {
+  it('should be able to navigate to finance tab', async () => {
     await navigateToLogInPage.execute();
 
     const { email, password } = ixcConfig.testing.account;
@@ -51,21 +57,15 @@ describe('FindCustomerByField', () => {
 
     await navigateToCustomersPage.execute();
 
-    const customers = await extractCustomersList.execute();
+    const testingCustomerData = ixcConfig.testing.customers[0];
 
-    console.log(customers);
+    const customer = await findCustomerByField.execute({
+      field: 'id',
+      value: testingCustomerData.id,
+    });
 
-    expect(customers).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          active: expect.any(Boolean),
-          id: expect.any(String),
-          company_name: expect.any(String),
-          fantasy_name: expect.any(String),
-          document: expect.any(String),
-          identity: expect.any(String),
-        }),
-      ]),
-    );
+    await openCustomerDetails.execute({ customer });
+
+    await navigateToFinanceTab.execute();
   });
 });

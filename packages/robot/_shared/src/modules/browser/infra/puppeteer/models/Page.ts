@@ -86,7 +86,7 @@ class Page implements IPage<puppeteer.Page> {
     return elements;
   }
 
-  public async waitForElementsWithText(
+  public async waitForElementWithText(
     str: string,
     elementTag = '*',
     restPath = '',

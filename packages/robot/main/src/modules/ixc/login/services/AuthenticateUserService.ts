@@ -2,6 +2,8 @@ import { injectable, inject } from 'tsyringe';
 
 import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 
+import sleep from '@utils/sleep';
+
 interface IRequest {
   email: string;
   password: string;
@@ -32,6 +34,12 @@ export default class AuthenticateUserService {
       await findLogInButtonElement.click();
     } finally {
       await this.page.driver.waitForNavigation();
+
+      await this.page.driver.waitForSelector(
+        '#menu04400d48d04acd3599cf545dafbb90ed > div > a',
+      );
+
+      await sleep(2000);
     }
 
     return false;

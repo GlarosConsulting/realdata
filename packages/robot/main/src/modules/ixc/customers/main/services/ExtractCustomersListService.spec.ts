@@ -7,25 +7,23 @@ import ixcConfig from '@config/ixc';
 import AuthenticateUserService from '@modules/ixc/login/services/AuthenticateUserService';
 import NavigateToLogInPageService from '@modules/ixc/login/services/NavigateToLogInPageService';
 
-import FindCustomerByFieldService from './FindCustomerByFieldService';
+import ExtractCustomersListService from './ExtractCustomersListService';
 import NavigateToCustomersPageService from './NavigateToCustomersPageService';
-import OpenCustomerDetailsService from './OpenCustomerDetailsService';
 
 let puppeteerBrowserProvider: PuppeteerBrowserProvider;
 let navigateToLogInPage: NavigateToLogInPageService;
 let authenticateUser: AuthenticateUserService;
 let navigateToCustomersPage: NavigateToCustomersPageService;
-let findCustomerByField: FindCustomerByFieldService;
-let openCustomerDetails: OpenCustomerDetailsService;
+let extractCustomersList: ExtractCustomersListService;
 
 let browser: Browser;
 let page: Page;
 
-describe('FindCustomerByField', () => {
+describe('ExtractCustomersList', () => {
   beforeAll(async () => {
     puppeteerBrowserProvider = new PuppeteerBrowserProvider();
 
-    browser = await puppeteerBrowserProvider.launch({ headless: false });
+    browser = await puppeteerBrowserProvider.launch();
   });
 
   beforeEach(async () => {
@@ -34,15 +32,14 @@ describe('FindCustomerByField', () => {
     navigateToLogInPage = new NavigateToLogInPageService(page);
     authenticateUser = new AuthenticateUserService(page);
     navigateToCustomersPage = new NavigateToCustomersPageService(page);
-    findCustomerByField = new FindCustomerByFieldService(page);
-    openCustomerDetails = new OpenCustomerDetailsService(page);
+    extractCustomersList = new ExtractCustomersListService(page);
   });
 
   afterAll(async () => {
-    // await browser.close();
+    await browser.close();
   });
 
-  it('should be able to find customer by field', async () => {
+  it('should be able to navigate to customers page', async () => {
     await navigateToLogInPage.execute();
 
     const { email, password } = ixcConfig.testing.account;
@@ -54,19 +51,19 @@ describe('FindCustomerByField', () => {
 
     await navigateToCustomersPage.execute();
 
-    const testingCustomerData = ixcConfig.testing.customers[0];
+    const customers = await extractCustomersList.execute();
 
-    const customer = await findCustomerByField.execute({
-      field: 'id',
-      value: testingCustomerData.id,
-    });
-
-    await openCustomerDetails.execute({ customer });
-
-    const [findIdInputElement] = await page.findElementsBySelector(
-      'div.panel.mostrando input#id[name="id"]',
+    expect(customers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          active: expect.any(Boolean),
+          id: expect.any(String),
+          company_name: expect.any(String),
+          fantasy_name: expect.any(String),
+          document: expect.any(String),
+          identity: expect.any(String),
+        }),
+      ]),
     );
-
-    expect(findIdInputElement).toBeTruthy();
   });
 });

@@ -22,7 +22,7 @@ interface IRobotIXCConfig {
 export default {
   pages: {
     login: {
-      url: process.env.IXC_AUTHENTICATION_PAGE_URL,
+      url: 'https://central.realdata.com.br/login.php',
     },
   },
 

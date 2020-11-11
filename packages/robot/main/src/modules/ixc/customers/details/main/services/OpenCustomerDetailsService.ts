@@ -3,7 +3,9 @@ import { injectable, inject } from 'tsyringe';
 import AppError from '@robot/shared/errors/AppError';
 import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 
-import ICustomer from '@modules/ixc/customers/models/ICustomer';
+import sleep from '@utils/sleep';
+
+import ICustomer from '@modules/ixc/customers/main/models/ICustomer';
 
 interface IRequest {
   customer: ICustomer;
@@ -25,19 +27,10 @@ export default class OpenCustomerDetailsService {
       throw new AppError('You should be with the customers window opened.');
     }
 
-    const [findCustomerRowElement] = await this.page.findElementsByText(
-      customer.id,
-      'td[@abbr="cliente.id"]/div',
-      '/../..',
-    );
-
-    if (!findCustomerRowElement) {
-      throw new AppError('I was not able to find customer row on table.');
-    }
-
-    this.page.driver.evaluate(() => {
+    /* istanbul ignore next */
+    this.page.evaluate(customerId => {
       const element = document.evaluate(
-        '//td[@abbr="cliente.id"]/div[contains(text(), \'13892\')]/../..',
+        `//td[@abbr="cliente.id"]/div[contains(text(), '${customerId}')]/../..`,
         document,
         null,
         XPathResult.FIRST_ORDERED_NODE_TYPE,
@@ -48,10 +41,12 @@ export default class OpenCustomerDetailsService {
       clickEvent.initEvent('dblclick', true, true);
 
       element.dispatchEvent(clickEvent);
-    });
+    }, customer.id);
 
     await this.page.driver.waitForSelector(
       'div.panel.mostrando input#id[name="id"]',
     );
+
+    await sleep(2000);
   }
 }

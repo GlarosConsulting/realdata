@@ -25,7 +25,7 @@ export default interface IPage<Page> {
     str: string,
     elementTag?: string,
   ): Promise<puppeteer.ElementHandle[]>;
-  waitForElementsWithText(
+  waitForElementWithText(
     str: string,
     elementTag?: string,
   ): Promise<puppeteer.ElementHandle<Element>>;

@@ -5,7 +5,7 @@ import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 
 import sleep from '@utils/sleep';
 
-import ICustomer from '@modules/ixc/customers/models/ICustomer';
+import ICustomer from '@modules/ixc/customers/main/models/ICustomer';
 
 import ExtractCustomersListService from './ExtractCustomersListService';
 
@@ -38,38 +38,30 @@ export default class FindCustomerByFieldService {
       throw new AppError('You should be with the customers window opened.');
     }
 
-    await this.page.driver.waitForSelector(
-      'div.modal2 > div > div.sDiv > div > span',
-    );
-
-    const [findFieldSelectorElement] = await this.page.findElementsBySelector(
-      'div.modal2 > div > div.sDiv > div > span:nth-child(1)',
-    );
-
-    await findFieldSelectorElement.click();
-
-    await sleep(1000);
-
-    await this.page.driver.waitForSelector(
-      'div.modal2 > div > div.sDiv > nav > ul > li',
-    );
-
-    const [findFieldElement] = await this.page.findElementsBySelector(
-      `div.modal2 > div > div.sDiv > nav > ul > li[data-nome="${FIELDS[field]}"]`,
-    );
-
-    await findFieldElement.click();
+    /* istanbul ignore next */
+    await this.page.evaluate(fieldName => {
+      document
+        .querySelector<HTMLElement>(
+          `div.modal2 > div > div.sDiv > nav > ul > li[data-nome="${fieldName}"]`,
+        )
+        .click();
+    }, FIELDS[field]);
 
     const [findInputElement] = await this.page.findElementsBySelector(
       `div.modal2 > div > div.sDiv > div > input[placeholder="Consultar por ${FIELDS[field]}"]`,
     );
 
-    await this.page.typeToElement(
-      findInputElement,
-      value + String.fromCharCode(13),
-    );
+    await this.page.typeToElement(findInputElement, value);
 
-    await sleep(1000);
+    await sleep(500);
+
+    await this.page.typeToElement(findInputElement, String.fromCharCode(13));
+
+    await sleep(500);
+
+    await this.page.driver.waitForSelector(
+      'div.modal2 div.bDiv table tbody tr',
+    );
 
     const customers = await this.extractCustomersList.execute();
 

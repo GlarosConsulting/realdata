@@ -10,6 +10,10 @@ export default class NavigateToCustomersPageService {
   ) {}
 
   public async execute(): Promise<void> {
+    await this.page.driver.waitForSelector(
+      '#menu04400d48d04acd3599cf545dafbb90ed > div > a',
+    );
+
     const [
       findRegistersDropdownButtonMenuElement,
     ] = await this.page.findElementsBySelector(
@@ -20,11 +24,13 @@ export default class NavigateToCustomersPageService {
 
     const [findCustomersButtonMenuElement] = await this.page.findElementsByText(
       'Clientes',
-      "a[@rel=\"cria_grid('#1_grid','cliente','N');\"]",
+      'a',
     );
 
     await findCustomersButtonMenuElement.click();
 
-    await this.page.waitForElementsWithText('Cliente', 'div[@class="ftitle"]');
+    await this.page.driver.waitForSelector(
+      'body div.modal2 div.mDiv div.ftitle',
+    );
   }
 }

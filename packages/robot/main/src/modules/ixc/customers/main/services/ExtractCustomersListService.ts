@@ -4,7 +4,7 @@ import AppError from '@robot/shared/errors/AppError';
 import injectFunctions from '@robot/shared/modules/browser/infra/puppeteer/inject';
 import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 
-import ICustomer from '@modules/ixc/customers/models/ICustomer';
+import ICustomer from '@modules/ixc/customers/main/models/ICustomer';
 
 @injectable()
 export default class ExtractCustomersListService {

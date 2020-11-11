@@ -16,6 +16,10 @@ class Browser implements IBrowser<puppeteer.Browser, Page> {
   public async newPage(): Promise<Page> {
     const page = await this.driver.newPage();
 
+    await page.setUserAgent(
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',
+    );
+
     await page.setViewport({
       width: 1366,
       height: 768,
