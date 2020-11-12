@@ -5,7 +5,7 @@ import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 
 import sleep from '@utils/sleep';
 
-import ICustomer from '@modules/ixc/customers/main/models/ICustomer';
+import ICustomerIXC from '@modules/ixc/customers/main/models/ICustomerIXC';
 
 import ExtractCustomersListService from './ExtractCustomersListService';
 
@@ -29,7 +29,7 @@ export default class FindCustomerByFieldService {
     this.extractCustomersList = new ExtractCustomersListService(page);
   }
 
-  public async execute({ field, value }: IRequest): Promise<ICustomer> {
+  public async execute({ field, value }: IRequest): Promise<ICustomerIXC> {
     const [
       findCustomersWindowTitleElement,
     ] = await this.page.findElementsByText('Cliente', 'div[@class="ftitle"]');

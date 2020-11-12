@@ -4,7 +4,7 @@ import AppError from '@robot/shared/errors/AppError';
 import injectFunctions from '@robot/shared/modules/browser/infra/puppeteer/inject';
 import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 
-import ICustomer from '@modules/ixc/customers/main/models/ICustomer';
+import ICustomerIXC from '@modules/ixc/customers/main/models/ICustomerIXC';
 
 @injectable()
 export default class ExtractCustomersListService {
@@ -13,7 +13,7 @@ export default class ExtractCustomersListService {
     private page: Page,
   ) {}
 
-  public async execute(): Promise<ICustomer[]> {
+  public async execute(): Promise<ICustomerIXC[]> {
     const [
       findCustomersWindowTitleElement,
     ] = await this.page.findElementsByText('Cliente', 'div[@class="ftitle"]');
@@ -33,8 +33,8 @@ export default class ExtractCustomersListService {
     await injectFunctions(this.page);
 
     /* istanbul ignore next */
-    const customers = await this.page.evaluate<ICustomer[]>(() => {
-      const data: ICustomer[] = [];
+    const customers = await this.page.evaluate<ICustomerIXC[]>(() => {
+      const data: ICustomerIXC[] = [];
 
       const tableRows = document.querySelectorAll('#grid_1 > tbody tr');
 
@@ -50,7 +50,7 @@ export default class ExtractCustomersListService {
         const document = getTextBySelector('td:nth-child(6) > div', row);
         const identity = getTextBySelector('td:nth-child(7) > div', row);
 
-        const customer: ICustomer = {
+        const customer: ICustomerIXC = {
           active,
           id,
           name: company_name,
@@ -59,7 +59,7 @@ export default class ExtractCustomersListService {
           identity,
         };
 
-        data.push(customer as ICustomer);
+        data.push(customer as ICustomerIXC);
       });
 
       return data;

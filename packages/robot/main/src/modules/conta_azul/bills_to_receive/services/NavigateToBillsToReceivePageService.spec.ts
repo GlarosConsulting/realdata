@@ -4,17 +4,20 @@ import PuppeteerBrowserProvider from '@robot/shared/modules/browser/providers/Br
 
 import contaAzulConfig from '@config/conta_azul';
 
-import AuthenticateUserService from './AuthenticateUserService';
-import NavigateToLogInPageService from './NavigateToLogInPageService';
+import AuthenticateUserService from '@modules/conta_azul/login/services/AuthenticateUserService';
+import NavigateToLogInPageService from '@modules/conta_azul/login/services/NavigateToLogInPageService';
+
+import NavigateToBillsToReceivePageService from './NavigateToBillsToReceivePageService';
 
 let puppeteerBrowserProvider: PuppeteerBrowserProvider;
 let navigateToLogInPage: NavigateToLogInPageService;
 let authenticateUser: AuthenticateUserService;
+let navigateToBillsToReceivePage: NavigateToBillsToReceivePageService;
 
 let browser: Browser;
 let page: Page;
 
-describe('AuthenticateUser', () => {
+describe('NavigateToBillsToReceivePage', () => {
   beforeAll(async () => {
     puppeteerBrowserProvider = new PuppeteerBrowserProvider();
 
@@ -26,13 +29,16 @@ describe('AuthenticateUser', () => {
 
     navigateToLogInPage = new NavigateToLogInPageService(page);
     authenticateUser = new AuthenticateUserService(page);
+    navigateToBillsToReceivePage = new NavigateToBillsToReceivePageService(
+      page,
+    );
   });
 
   afterAll(async () => {
     await browser.close();
   });
 
-  it('should be able to authenticate user', async () => {
+  it('should be able to navigate to bills to receive page', async () => {
     await navigateToLogInPage.execute();
 
     const { email, password } = contaAzulConfig.testing.account;
@@ -42,10 +48,10 @@ describe('AuthenticateUser', () => {
       password,
     });
 
-    const [findDashboardElement] = await page.findElementsBySelector(
-      '#dashboardStatementsCard > div.col-xs-6.ca-u-z-index--300.ca-u-no-padding-left > statement-card > div > div.dashboard-small-card-height.slimbox.ng-isolate-scope.is-raisable.ca-u-z-index--200 > div.slimbox-header.ng-scope > h3',
-    );
+    const goTo = jest.spyOn(page, 'goTo');
 
-    expect(findDashboardElement).toBeTruthy();
+    await navigateToBillsToReceivePage.execute();
+
+    expect(goTo).toHaveBeenCalled();
   });
 });

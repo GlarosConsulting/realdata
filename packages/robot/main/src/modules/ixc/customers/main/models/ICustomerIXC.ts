@@ -1,4 +1,4 @@
-export default interface ICustomer {
+export default interface ICustomerIXC {
   active: boolean;
   id: string;
   name: string;

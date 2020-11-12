@@ -32,6 +32,8 @@ export default class AuthenticateUserService {
       });
 
       await findLogInButtonElement.click();
+    } catch {
+      // continue
     } finally {
       await this.page.driver.waitForNavigation();
 

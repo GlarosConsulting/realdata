@@ -5,10 +5,10 @@ import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 
 import sleep from '@utils/sleep';
 
-import ICustomer from '@modules/ixc/customers/main/models/ICustomer';
+import ICustomerIXC from '@modules/ixc/customers/main/models/ICustomerIXC';
 
 interface IRequest {
-  customer: ICustomer;
+  customer: ICustomerIXC;
 }
 
 @injectable()
