@@ -7,14 +7,14 @@ import contaAzulConfig from '@config/conta_azul';
 import AuthenticateUserService from '@modules/conta_azul/login/services/AuthenticateUserService';
 import NavigateToLogInPageService from '@modules/conta_azul/login/services/NavigateToLogInPageService';
 
-import ExtractCustomersListService from './ExtractCustomersListService';
-import NavigateToCustomersPageService from './NavigateToCustomersPageService';
+import ExtractBillsToPayListService from './ExtractBillsToPayListService';
+import NavigateToBillsToReceivePageService from './NavigateToBillsToReceivePageService';
 
 let puppeteerBrowserProvider: PuppeteerBrowserProvider;
 let navigateToLogInPage: NavigateToLogInPageService;
 let authenticateUser: AuthenticateUserService;
-let navigateToCustomersPage: NavigateToCustomersPageService;
-let extractCustomersList: ExtractCustomersListService;
+let navigateToBillsToReceivePage: NavigateToBillsToReceivePageService;
+let extractBillsToPayList: ExtractBillsToPayListService;
 
 let browser: Browser;
 let page: Page;
@@ -23,7 +23,7 @@ describe('ExtractBillsToPayList', () => {
   beforeAll(async () => {
     puppeteerBrowserProvider = new PuppeteerBrowserProvider();
 
-    browser = await puppeteerBrowserProvider.launch({ headless: false });
+    browser = await puppeteerBrowserProvider.launch();
   });
 
   beforeEach(async () => {
@@ -31,12 +31,14 @@ describe('ExtractBillsToPayList', () => {
 
     navigateToLogInPage = new NavigateToLogInPageService(page);
     authenticateUser = new AuthenticateUserService(page);
-    navigateToCustomersPage = new NavigateToCustomersPageService(page);
-    extractCustomersList = new ExtractCustomersListService(page);
+    navigateToBillsToReceivePage = new NavigateToBillsToReceivePageService(
+      page,
+    );
+    extractBillsToPayList = new ExtractBillsToPayListService(page);
   });
 
   afterAll(async () => {
-    // await browser.close();
+    await browser.close();
   });
 
   it('should be able to extract customers list', async () => {
@@ -49,18 +51,19 @@ describe('ExtractBillsToPayList', () => {
       password,
     });
 
-    await navigateToCustomersPage.execute();
+    await navigateToBillsToReceivePage.execute();
 
-    const customers = await extractCustomersList.execute();
+    const billsToPay = await extractBillsToPayList.execute();
 
-    expect(customers).toEqual(
+    expect(billsToPay).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          name: expect.any(String),
-          document: expect.any(String),
-          email: expect.any(String),
-          phone: expect.any(String),
-          active: expect.any(Boolean),
+          date: expect.any(Date),
+          value: expect.any(Number),
+          launch: {
+            type: expect.any(String),
+            person_name: expect.any(String),
+          },
         }),
       ]),
     );

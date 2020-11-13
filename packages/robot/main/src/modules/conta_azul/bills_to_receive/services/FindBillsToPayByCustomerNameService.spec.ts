@@ -7,19 +7,19 @@ import contaAzulConfig from '@config/conta_azul';
 import AuthenticateUserService from '@modules/conta_azul/login/services/AuthenticateUserService';
 import NavigateToLogInPageService from '@modules/conta_azul/login/services/NavigateToLogInPageService';
 
-import FindBillToPayByFieldService from './FindBillToPayByFieldService';
+import FindBillsToPayByCustomerNameService from './FindBillsToPayByCustomerNameService';
 import NavigateToBillsToReceivePageService from './NavigateToBillsToReceivePageService';
 
 let puppeteerBrowserProvider: PuppeteerBrowserProvider;
 let navigateToLogInPage: NavigateToLogInPageService;
 let authenticateUser: AuthenticateUserService;
 let navigateToBillsToReceivePage: NavigateToBillsToReceivePageService;
-let findBillToPayByField: FindBillToPayByFieldService;
+let findBillsToPayByCustomerName: FindBillsToPayByCustomerNameService;
 
 let browser: Browser;
 let page: Page;
 
-describe('FindCustomerByField', () => {
+describe('FindBillsToPayByCustomerName', () => {
   beforeAll(async () => {
     puppeteerBrowserProvider = new PuppeteerBrowserProvider();
 
@@ -34,7 +34,9 @@ describe('FindCustomerByField', () => {
     navigateToBillsToReceivePage = new NavigateToBillsToReceivePageService(
       page,
     );
-    findBillToPayByField = new FindBillToPayByFieldService(page);
+    findBillsToPayByCustomerName = new FindBillsToPayByCustomerNameService(
+      page,
+    );
   });
 
   afterAll(async () => {
@@ -55,17 +57,24 @@ describe('FindCustomerByField', () => {
 
     const testingCustomer = contaAzulConfig.testing.customers[0];
 
-    const customer = await findBillToPayByField.execute({
-      field: 'document',
-      value: testingCustomer.document,
-    });
+    const billsToPayByCustomerName = await findBillsToPayByCustomerName.execute(
+      {
+        customer_name: testingCustomer.name,
+      },
+    );
 
-    expect(customer).toEqual({
-      name: testingCustomer.name,
-      document: testingCustomer.document,
-      email: expect.any(String),
-      phone: expect.any(String),
-      active: expect.any(Boolean),
-    });
+    expect(billsToPayByCustomerName).toEqual(
+      expect.arrayContaining([
+        {
+          expired: expect.any(Boolean),
+          date: expect.any(Date),
+          value: expect.any(Number),
+          launch: {
+            type: expect.any(String),
+            customer_name: testingCustomer.name,
+          },
+        },
+      ]),
+    );
   });
 });

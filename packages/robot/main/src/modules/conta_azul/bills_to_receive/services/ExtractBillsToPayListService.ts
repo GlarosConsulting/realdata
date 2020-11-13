@@ -4,7 +4,13 @@ import AppError from '@robot/shared/errors/AppError';
 import injectFunctions from '@robot/shared/modules/browser/infra/puppeteer/inject';
 import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 
-import ICustomerContaAzul from '@modules/conta_azul/customers/models/ICustomerContaAzul';
+import parseDate from '@utils/parseDate';
+
+import IBillToPay from '@modules/conta_azul/bills_to_receive/models/IBillToPay';
+
+interface IExtractBillToPay extends Omit<IBillToPay, 'date'> {
+  date: string;
+}
 
 @injectable()
 export default class ExtractBillsToPayListService {
@@ -13,9 +19,9 @@ export default class ExtractBillsToPayListService {
     private page: Page,
   ) {}
 
-  public async execute(): Promise<ICustomerContaAzul[]> {
+  public async execute(): Promise<IBillToPay[]> {
     const [findCustomersTitleElement] = await this.page.findElementsBySelector(
-      '#addFinance > button.btn.btn-primary.primary-action',
+      'table > tbody > tr > td',
     );
 
     if (!findCustomersTitleElement) {
@@ -33,35 +39,54 @@ export default class ExtractBillsToPayListService {
     await injectFunctions(this.page);
 
     /* istanbul ignore next */
-    const customers = await this.page.evaluate<ICustomerContaAzul[]>(() => {
-      const data: ICustomerContaAzul[] = [];
+    const extractedBillsToPay = await this.page.evaluate<IExtractBillToPay[]>(
+      () => {
+        const data: IExtractBillToPay[] = [];
 
-      const tableRows = document.querySelectorAll(
-        'div#statement-list-container > table > tbody',
-      );
+        const tableRows = document.querySelectorAll(
+          'div#statement-list-container > table > tbody > tr',
+        );
 
-      tableRows.forEach(row => {
-        const date = getTextBySelector('td.new_tooltip', row);
-        const document = getTextBySelector('td:nth-child(3)', row);
-        const email = getTextBySelector('td:nth-child(4)', row);
-        const phone = getTextBySelector('td:nth-child(5)', row);
-        const active =
-          getTextBySelector('td:nth-child(6) > span > b', row) === 'Ativo';
+        console.log(tableRows);
 
-        const customer: ICustomerContaAzul = {
-          name,
-          document,
-          email,
-          phone,
-          active,
-        };
+        tableRows.forEach(row => {
+          const expired = row.getAttribute('class') === 'vencido';
 
-        data.push(customer as ICustomerContaAzul);
-      });
+          const date = getTextBySelector('td.new_tooltip', row);
+          const value = Number(
+            getTextBySelector(
+              'td.right.value-column > div.act-mailsender-value.statement-value',
+              row,
+            ).replace(',', '.'),
+          );
+          const type = getTextBySelector('td.statement > span', row);
+          const customer_name = getTextBySelector(
+            'td.statement > div.statement-table > span.limit-text.span1-max.description-left.client-label.act-client-label.show.new_tooltip',
+            row,
+          );
 
-      return data;
-    });
+          const billToPay: IExtractBillToPay = {
+            expired,
+            date,
+            value,
+            launch: {
+              type,
+              customer_name,
+            },
+          };
 
-    return customers;
+          data.push(billToPay);
+        });
+
+        return data;
+      },
+    );
+
+    const billsToPay = extractedBillsToPay.map<IBillToPay>(billToPay => ({
+      ...billToPay,
+      date: parseDate(billToPay.date),
+    }));
+
+    return billsToPay;
   }
 }
