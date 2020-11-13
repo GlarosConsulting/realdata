@@ -7,19 +7,19 @@ import contaAzulConfig from '@config/conta_azul';
 import AuthenticateUserService from '@modules/conta_azul/login/services/AuthenticateUserService';
 import NavigateToLogInPageService from '@modules/conta_azul/login/services/NavigateToLogInPageService';
 
-import FindBillsToPayByCustomerNameService from './FindBillsToPayByCustomerNameService';
+import ExtractBillsToPayListService from './ExtractBillsToPayListService';
 import NavigateToBillsToReceivePageService from './NavigateToBillsToReceivePageService';
 
 let puppeteerBrowserProvider: PuppeteerBrowserProvider;
 let navigateToLogInPage: NavigateToLogInPageService;
 let authenticateUser: AuthenticateUserService;
 let navigateToBillsToReceivePage: NavigateToBillsToReceivePageService;
-let findBillsToPayByCustomerName: FindBillsToPayByCustomerNameService;
+let extractBillsToPayList: ExtractBillsToPayListService;
 
 let browser: Browser;
 let page: Page;
 
-describe('FindBillsToPayByCustomerName', () => {
+describe('ExtractBillsToPayList', () => {
   beforeAll(async () => {
     puppeteerBrowserProvider = new PuppeteerBrowserProvider();
 
@@ -34,16 +34,14 @@ describe('FindBillsToPayByCustomerName', () => {
     navigateToBillsToReceivePage = new NavigateToBillsToReceivePageService(
       page,
     );
-    findBillsToPayByCustomerName = new FindBillsToPayByCustomerNameService(
-      page,
-    );
+    extractBillsToPayList = new ExtractBillsToPayListService(page);
   });
 
   afterAll(async () => {
     await browser.close();
   });
 
-  it('should be able to find bills to pay by field', async () => {
+  it('should be able to extract bills to pay list', async () => {
     await navigateToLogInPage.execute();
 
     const { email, password } = contaAzulConfig.testing.account;
@@ -55,25 +53,21 @@ describe('FindBillsToPayByCustomerName', () => {
 
     await navigateToBillsToReceivePage.execute();
 
-    const testingCustomer = contaAzulConfig.testing.customers[0];
+    const billsToPay = await extractBillsToPayList.execute();
 
-    const billsToPayByCustomerName = await findBillsToPayByCustomerName.execute(
-      {
-        customer_name: testingCustomer.name,
-      },
-    );
+    console.log(billsToPay);
 
-    expect(billsToPayByCustomerName).toEqual(
+    expect(billsToPay).toEqual(
       expect.arrayContaining([
-        {
+        expect.objectContaining({
           expired: expect.any(Boolean),
           date: expect.any(Date),
           value: expect.any(Number),
           launch: {
             type: expect.any(String),
-            customer_name: testingCustomer.name,
+            person_name: expect.any(String),
           },
-        },
+        }),
       ]),
     );
   });

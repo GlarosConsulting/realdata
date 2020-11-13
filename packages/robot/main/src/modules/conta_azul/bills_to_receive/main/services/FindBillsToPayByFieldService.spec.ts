@@ -7,19 +7,19 @@ import contaAzulConfig from '@config/conta_azul';
 import AuthenticateUserService from '@modules/conta_azul/login/services/AuthenticateUserService';
 import NavigateToLogInPageService from '@modules/conta_azul/login/services/NavigateToLogInPageService';
 
-import FindCustomerByFieldService from './FindCustomerByFieldService';
-import NavigateToCustomersPageService from './NavigateToCustomersPageService';
+import FindBillsToPayByFieldService from './FindBillsToPayByFieldService';
+import NavigateToBillsToReceivePageService from './NavigateToBillsToReceivePageService';
 
 let puppeteerBrowserProvider: PuppeteerBrowserProvider;
 let navigateToLogInPage: NavigateToLogInPageService;
 let authenticateUser: AuthenticateUserService;
-let navigateToCustomersPage: NavigateToCustomersPageService;
-let findCustomerByField: FindCustomerByFieldService;
+let navigateToBillsToReceivePage: NavigateToBillsToReceivePageService;
+let findBillsToPayByField: FindBillsToPayByFieldService;
 
 let browser: Browser;
 let page: Page;
 
-describe('FindCustomerByField', () => {
+describe('FindBillsToPayByField', () => {
   beforeAll(async () => {
     puppeteerBrowserProvider = new PuppeteerBrowserProvider();
 
@@ -31,15 +31,17 @@ describe('FindCustomerByField', () => {
 
     navigateToLogInPage = new NavigateToLogInPageService(page);
     authenticateUser = new AuthenticateUserService(page);
-    navigateToCustomersPage = new NavigateToCustomersPageService(page);
-    findCustomerByField = new FindCustomerByFieldService(page);
+    navigateToBillsToReceivePage = new NavigateToBillsToReceivePageService(
+      page,
+    );
+    findBillsToPayByField = new FindBillsToPayByFieldService(page);
   });
 
   afterAll(async () => {
     await browser.close();
   });
 
-  it('should be able to find customer by field', async () => {
+  it('should be able to find bills to pay by field', async () => {
     await navigateToLogInPage.execute();
 
     const { email, password } = contaAzulConfig.testing.account;
@@ -49,23 +51,28 @@ describe('FindCustomerByField', () => {
       password,
     });
 
-    await navigateToCustomersPage.execute();
+    await navigateToBillsToReceivePage.execute();
 
     const testingCustomer = contaAzulConfig.testing.customers[0];
 
-    const customer = await findCustomerByField.execute({
-      field: 'document',
-      value: testingCustomer.document,
+    const billsToPayByField = await findBillsToPayByField.execute({
+      field: 'launch.customer_name',
+      value: testingCustomer.name,
     });
 
-    console.log(customer);
-
-    expect(customer).toEqual({
-      name: testingCustomer.name,
-      document: testingCustomer.document,
-      email: expect.any(String),
-      phone: expect.any(String),
-      active: expect.any(Boolean),
-    });
+    expect(billsToPayByField).toEqual(
+      expect.arrayContaining([
+        {
+          expired: expect.any(Boolean),
+          date: expect.any(Date),
+          value: expect.any(Number),
+          sell_id: expect.any(String),
+          launch: {
+            type: expect.any(String),
+            customer_name: testingCustomer.name,
+          },
+        },
+      ]),
+    );
   });
 });

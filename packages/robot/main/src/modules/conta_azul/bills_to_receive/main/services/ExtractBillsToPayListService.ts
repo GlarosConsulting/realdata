@@ -6,7 +6,7 @@ import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 
 import parseDate from '@utils/parseDate';
 
-import IBillToPay from '@modules/conta_azul/bills_to_receive/models/IBillToPay';
+import IBillToPay from '@modules/conta_azul/bills_to_receive/main/models/IBillToPay';
 
 interface IExtractBillToPay extends Omit<IBillToPay, 'date'> {
   date: string;
@@ -59,6 +59,11 @@ export default class ExtractBillsToPayListService {
               row,
             ).replace(',', '.'),
           );
+          const sell_id = getTextBySelector(
+            'td.statement > div.statement-table > span.min-padding-left.limit-text.span3-max.statement-description.act-description.description-left.new_tooltip',
+            row,
+          );
+
           const type = getTextBySelector('td.statement > span', row);
           const customer_name = getTextBySelector(
             'td.statement > div.statement-table > span.limit-text.span1-max.description-left.client-label.act-client-label.show.new_tooltip',
@@ -69,6 +74,7 @@ export default class ExtractBillsToPayListService {
             expired,
             date,
             value,
+            sell_id,
             launch: {
               type,
               customer_name,

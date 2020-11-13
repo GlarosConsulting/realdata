@@ -5,16 +5,21 @@ import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 
 import sleep from '@utils/sleep';
 
-import IBillToPay from '@modules/conta_azul/bills_to_receive/models/IBillToPay';
+import IBillToPay from '@modules/conta_azul/bills_to_receive/main/models/IBillToPay';
 
 import ExtractBillsToPayListService from './ExtractBillsToPayListService';
 
+const FIELDS = {
+  'launch.customer_name': '#clienteFornecedorSearch',
+};
+
 interface IRequest {
-  customer_name: string;
+  field: keyof typeof FIELDS;
+  value: string;
 }
 
 @injectable()
-export default class FindBillToPayByCustomerNameService {
+export default class FindBillsToPayByFieldService {
   private extractCustomersList: ExtractBillsToPayListService;
 
   constructor(
@@ -24,14 +29,18 @@ export default class FindBillToPayByCustomerNameService {
     this.extractCustomersList = new ExtractBillsToPayListService(page);
   }
 
-  public async execute({ customer_name }: IRequest): Promise<IBillToPay[]> {
-    const [findCustomersTitleElement] = await this.page.findElementsBySelector(
+  public async execute({ field, value }: IRequest): Promise<IBillToPay[]> {
+    const [
+      findBillsToPayIdentifierElement,
+    ] = await this.page.findElementsBySelector(
       '#addFinance > button.btn.btn-primary.primary-action',
     );
 
-    if (!findCustomersTitleElement) {
+    if (!findBillsToPayIdentifierElement) {
       throw new AppError('You should be in bills to pay page.');
     }
+
+    await sleep(1000);
 
     const [
       findSearchFieldsDropdownElement,
@@ -42,10 +51,10 @@ export default class FindBillToPayByCustomerNameService {
     await findSearchFieldsDropdownElement.click();
 
     const [findInputElement] = await this.page.findElementsBySelector(
-      '#clienteFornecedorSearch',
+      FIELDS[field],
     );
 
-    await this.page.typeToElement(findInputElement, customer_name);
+    await this.page.typeToElement(findInputElement, value);
 
     await sleep(500);
 
@@ -63,9 +72,15 @@ export default class FindBillToPayByCustomerNameService {
 
     const billsToPay = await this.extractCustomersList.execute();
 
-    const billsToPayByCustomer = billsToPay.filter(
-      customer => customer.launch.customer_name === customer_name,
-    );
+    const billsToPayByCustomer = billsToPay.filter(customer => {
+      if (field.includes('launch.')) {
+        const launchField = field.split('.')[1];
+
+        return customer['launch'][launchField] === value;
+      }
+
+      return customer[field] === value;
+    });
 
     return billsToPayByCustomer;
   }
