@@ -35,8 +35,6 @@ export default class AuthenticateUserService {
     } catch {
       // continue
     } finally {
-      await this.page.driver.waitForNavigation();
-
       await this.page.driver.waitForSelector(
         '#menu04400d48d04acd3599cf545dafbb90ed > div > a',
       );

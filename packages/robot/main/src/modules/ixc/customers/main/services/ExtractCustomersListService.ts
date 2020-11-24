@@ -23,7 +23,7 @@ export default class ExtractCustomersListService {
     }
 
     const [findTableBodyElement] = await this.page.findElementsBySelector(
-      '#grid_1 > tbody',
+      'table#grid_1 > tbody > tr',
     );
 
     if (!findTableBodyElement) {
@@ -36,7 +36,9 @@ export default class ExtractCustomersListService {
     const customers = await this.page.evaluate<ICustomerIXC[]>(() => {
       const data: ICustomerIXC[] = [];
 
-      const tableRows = document.querySelectorAll('#grid_1 > tbody tr');
+      const tableRows = document.querySelectorAll('table#grid_1 > tbody > tr');
+
+      console.log(tableRows);
 
       tableRows.forEach(row => {
         const active =

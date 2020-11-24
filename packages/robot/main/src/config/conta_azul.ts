@@ -18,10 +18,6 @@ interface IContaAzulConfig {
       email: string;
       password: string;
     };
-    customers: Array<{
-      document: string;
-      name: string;
-    }>;
   };
 }
 
@@ -44,15 +40,5 @@ export default {
       email: process.env.CONTA_AZUL_TESTING_ACCOUNT_EMAIL,
       password: process.env.CONTA_AZUL_TESTING_ACCOUNT_PASSWORD,
     },
-    customers: [
-      {
-        document: '044.840.016-24',
-        name: 'Karla Angelina Morares Vieira',
-      },
-      {
-        document: '114.922.266-29',
-        name: 'Regiane Ferreira Sampaio',
-      },
-    ],
   },
 } as IContaAzulConfig;

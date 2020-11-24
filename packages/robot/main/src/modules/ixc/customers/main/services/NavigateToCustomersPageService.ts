@@ -2,6 +2,8 @@ import { injectable, inject } from 'tsyringe';
 
 import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 
+import sleep from '@utils/sleep';
+
 @injectable()
 export default class NavigateToCustomersPageService {
   constructor(
@@ -22,9 +24,11 @@ export default class NavigateToCustomersPageService {
 
     await findRegistersDropdownButtonMenuElement.click();
 
+    await sleep(1000);
+
     const [findCustomersButtonMenuElement] = await this.page.findElementsByText(
       'Clientes',
-      'a',
+      'ul/li/a',
     );
 
     await findCustomersButtonMenuElement.click();
@@ -32,5 +36,7 @@ export default class NavigateToCustomersPageService {
     await this.page.driver.waitForSelector(
       'body div.modal2 div.mDiv div.ftitle',
     );
+
+    await sleep(1000);
   }
 }

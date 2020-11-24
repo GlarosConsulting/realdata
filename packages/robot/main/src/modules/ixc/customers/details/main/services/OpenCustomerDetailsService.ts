@@ -5,10 +5,8 @@ import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 
 import sleep from '@utils/sleep';
 
-import ICustomerIXC from '@modules/ixc/customers/main/models/ICustomerIXC';
-
 interface IRequest {
-  customer: ICustomerIXC;
+  customer_id: string;
 }
 
 @injectable()
@@ -18,7 +16,7 @@ export default class OpenCustomerDetailsService {
     private page: Page,
   ) {}
 
-  public async execute({ customer }: IRequest): Promise<void> {
+  public async execute({ customer_id }: IRequest): Promise<void> {
     const [
       findCustomersWindowTitleElement,
     ] = await this.page.findElementsByText('Cliente', 'div[@class="ftitle"]');
@@ -41,7 +39,7 @@ export default class OpenCustomerDetailsService {
       clickEvent.initEvent('dblclick', true, true);
 
       element.dispatchEvent(clickEvent);
-    }, customer.id);
+    }, customer_id);
 
     await this.page.driver.waitForSelector(
       'div.panel.mostrando input#id[name="id"]',

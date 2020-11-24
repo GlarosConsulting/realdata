@@ -4,26 +4,26 @@ import PuppeteerBrowserProvider from '@robot/shared/modules/browser/providers/Br
 
 import contaAzulConfig from '@config/conta_azul';
 
-import FindBillsToPayByFieldService from '@modules/conta_azul/bills_to_receive/main/services/FindBillsToPayByFieldService';
+import FindBillsToReceiveByFieldService from '@modules/conta_azul/bills_to_receive/main/services/FindBillsToReceiveByFieldService';
 import NavigateToBillsToReceivePageService from '@modules/conta_azul/bills_to_receive/main/services/NavigateToBillsToReceivePageService';
-import OpenBillToPayDetailsService from '@modules/conta_azul/bills_to_receive/main/services/OpenBillToPayDetailsService';
 import AuthenticateUserService from '@modules/conta_azul/login/services/AuthenticateUserService';
 import NavigateToLogInPageService from '@modules/conta_azul/login/services/NavigateToLogInPageService';
 
-import FillBillToPayDetailsDataService from './FillBillToPayDetailsDataService';
+import FillBillToReceiveDetailsDataService from './FillBillToReceiveDetailsDataService';
+import OpenBillToReceiveDetailsService from './OpenBillToReceiveDetailsService';
 
 let puppeteerBrowserProvider: PuppeteerBrowserProvider;
 let navigateToLogInPage: NavigateToLogInPageService;
 let authenticateUser: AuthenticateUserService;
 let navigateToBillsToReceivePage: NavigateToBillsToReceivePageService;
-let findBillsToPayByField: FindBillsToPayByFieldService;
-let openBillToPayDetails: OpenBillToPayDetailsService;
-let fillBillToPayDetailsData: FillBillToPayDetailsDataService;
+let findBillsToReceiveByField: FindBillsToReceiveByFieldService;
+let openBillToReceiveDetails: OpenBillToReceiveDetailsService;
+let fillBillToReceiveDetailsData: FillBillToReceiveDetailsDataService;
 
 let browser: Browser;
 let page: Page;
 
-describe('FillBillToPayDetailsData', () => {
+describe('FillBillToReceiveDetailsData', () => {
   beforeAll(async () => {
     puppeteerBrowserProvider = new PuppeteerBrowserProvider();
 
@@ -38,16 +38,18 @@ describe('FillBillToPayDetailsData', () => {
     navigateToBillsToReceivePage = new NavigateToBillsToReceivePageService(
       page,
     );
-    findBillsToPayByField = new FindBillsToPayByFieldService(page);
-    openBillToPayDetails = new OpenBillToPayDetailsService(page);
-    fillBillToPayDetailsData = new FillBillToPayDetailsDataService(page);
+    findBillsToReceiveByField = new FindBillsToReceiveByFieldService(page);
+    openBillToReceiveDetails = new OpenBillToReceiveDetailsService(page);
+    fillBillToReceiveDetailsData = new FillBillToReceiveDetailsDataService(
+      page,
+    );
   });
 
   afterAll(async () => {
     await browser.close();
   });
 
-  it('should be able to find bills to pay by field', async () => {
+  it('should be able to find bills to receive by field', async () => {
     await navigateToLogInPage.execute();
 
     const { email, password } = contaAzulConfig.testing.account;
@@ -61,17 +63,17 @@ describe('FillBillToPayDetailsData', () => {
 
     const testingCustomer = contaAzulConfig.testing.customers[0];
 
-    const billsToPayByField = await findBillsToPayByField.execute({
+    const billsToReceiveByField = await findBillsToReceiveByField.execute({
       field: 'launch.customer_name',
       value: testingCustomer.name,
     });
 
-    console.log(billsToPayByField);
+    console.log(billsToReceiveByField);
 
-    await openBillToPayDetails.execute({
-      bill_to_pay_sell_id: billsToPayByField[0].sell_id,
+    await openBillToReceiveDetails.execute({
+      bill_to_receive_sell_id: billsToReceiveByField[0].sell_id,
     });
 
-    await fillBillToPayDetailsData.execute({ account: 'Sicoob' });
+    await fillBillToReceiveDetailsData.execute({ account: 'Sicoob' });
   });
 });

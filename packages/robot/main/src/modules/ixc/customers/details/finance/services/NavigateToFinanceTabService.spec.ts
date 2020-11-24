@@ -64,7 +64,7 @@ describe('NavigateToFinanceTab', () => {
       value: testingCustomerData.id,
     });
 
-    await openCustomerDetails.execute({ customer });
+    await openCustomerDetails.execute({ customer_id: customer.id });
 
     await navigateToFinanceTab.execute();
   });

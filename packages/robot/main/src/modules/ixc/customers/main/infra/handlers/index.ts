@@ -1,29 +1,52 @@
-import { inject, injectable } from 'tsyringe';
+import { merge } from 'lodash';
+import { container, inject, injectable } from 'tsyringe';
 
+import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 import { IHandler } from '@robot/shared/modules/browser/models/IBrowser';
 
-import IConfigurationProvider from '@shared/container/providers/ConfigurationProvider/models/IConfigurationProvider';
+import ICacheProvider from '@shared/container/providers/CacheProvider/models/ICacheProvider';
+import IExtendedCustomerIXC from '@shared/models/IExtendedCustomerIXC';
 
-import LogInPage from '@modules/ixc/login/infra/puppeteer/pages/LogInPage';
+import CustomersMainIXCPage from '@modules/ixc/customers/main/infra/puppeteer/pages/CustomersMainIXCPage';
 
 @injectable()
-class SignInHandler implements IHandler {
+class IXCCustomersMainHandler implements IHandler {
   constructor(
-    @inject('ConfigurationProvider')
-    private configurationProvider: IConfigurationProvider,
+    @inject('CacheProvider')
+    private cacheProvider: ICacheProvider,
   ) {}
 
-  public async handle(): Promise<void> {
-    const logInPage = new LogInPage();
+  public async handle(_browser: any, page: Page): Promise<void> {
+    page.driver.bringToFront();
+    container.registerInstance('Page', page);
 
-    await logInPage.navigateTo();
+    const customersMainIxcPage = new CustomersMainIXCPage();
 
-    const {
-      ixc: { email, password },
-    } = await this.configurationProvider.pick(['ixc']);
+    await customersMainIxcPage.navigateTo();
 
-    await logInPage.signIn({ email, password });
+    const ixcId = await this.cacheProvider.recover<string>('ixc-id');
+
+    const customer = await customersMainIxcPage.findByField({
+      field: 'id',
+      value: ixcId,
+    });
+
+    // console.log(customer);
+
+    let data = {
+      ...customer,
+    } as IExtendedCustomerIXC;
+
+    const recoveredIxcCustomer = await this.cacheProvider.recover<
+      IExtendedCustomerIXC
+    >('ixc-customer');
+
+    if (recoveredIxcCustomer) {
+      data = merge(recoveredIxcCustomer, data);
+    }
+
+    await this.cacheProvider.save('ixc-customer', data);
   }
 }
 
-export default SignInHandler;
+export default IXCCustomersMainHandler;

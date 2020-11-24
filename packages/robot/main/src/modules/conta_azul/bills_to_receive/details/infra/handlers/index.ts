@@ -4,26 +4,22 @@ import { IHandler } from '@robot/shared/modules/browser/models/IBrowser';
 
 import IConfigurationProvider from '@shared/container/providers/ConfigurationProvider/models/IConfigurationProvider';
 
-import LogInPage from '@modules/ixc/login/infra/puppeteer/pages/LogInPage';
+import ContaAzulBillsToReceiveDetailsPage from '@modules/conta_azul/bills_to_receive/details/infra/puppeteer/pages/ContaAzulBillsToReceiveDetailsPage';
 
 @injectable()
-class SignInHandler implements IHandler {
+class ContaAzulBillsToReceiveDetailsHandler implements IHandler {
   constructor(
     @inject('ConfigurationProvider')
     private configurationProvider: IConfigurationProvider,
   ) {}
 
   public async handle(): Promise<void> {
-    const logInPage = new LogInPage();
+    const contaAzulBillsToReceiveDetailsPage = new ContaAzulBillsToReceiveDetailsPage();
 
-    await logInPage.navigateTo();
-
-    const {
-      ixc: { email, password },
-    } = await this.configurationProvider.pick(['ixc']);
-
-    await logInPage.signIn({ email, password });
+    await contaAzulBillsToReceiveDetailsPage.open({
+      bill_to_receive_sell_id: '123',
+    });
   }
 }
 
-export default SignInHandler;
+export default ContaAzulBillsToReceiveDetailsHandler;

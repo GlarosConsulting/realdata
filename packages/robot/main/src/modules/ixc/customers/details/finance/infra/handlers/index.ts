@@ -1,29 +1,50 @@
+import { merge } from 'lodash';
 import { inject, injectable } from 'tsyringe';
 
 import { IHandler } from '@robot/shared/modules/browser/models/IBrowser';
 
-import IConfigurationProvider from '@shared/container/providers/ConfigurationProvider/models/IConfigurationProvider';
+import ICacheProvider from '@shared/container/providers/CacheProvider/models/ICacheProvider';
+import IExtendedCustomerIXC from '@shared/models/IExtendedCustomerIXC';
 
-import LogInPage from '@modules/ixc/login/infra/puppeteer/pages/LogInPage';
+import CustomersDetailsFinanceIXCPage from '@modules/ixc/customers/details/finance/infra/puppeteer/pages/CustomersDetailsFinanceIXCPage';
+import CustomersDetailsMainIXCPage from '@modules/ixc/customers/details/main/infra/puppeteer/pages/CustomersDetailsMainIXCPage';
 
 @injectable()
-class SignInHandler implements IHandler {
+class IXCCustomersDetailsFinanceHandler implements IHandler {
   constructor(
-    @inject('ConfigurationProvider')
-    private configurationProvider: IConfigurationProvider,
+    @inject('CacheProvider')
+    private cacheProvider: ICacheProvider,
   ) {}
 
   public async handle(): Promise<void> {
-    const logInPage = new LogInPage();
+    const customersDetailsFinanceIxcPage = new CustomersDetailsFinanceIXCPage();
 
-    await logInPage.navigateTo();
+    await customersDetailsFinanceIxcPage.navigateTo();
 
-    const {
-      ixc: { email, password },
-    } = await this.configurationProvider.pick(['ixc']);
+    const finances = await customersDetailsFinanceIxcPage.getAll();
 
-    await logInPage.signIn({ email, password });
+    // console.log(finances);
+
+    const customersDetailsMainIxcPage = new CustomersDetailsMainIXCPage();
+
+    await customersDetailsMainIxcPage.navigateTo();
+
+    let data = {
+      details: {
+        finances,
+      },
+    } as IExtendedCustomerIXC;
+
+    const recoveredCustomer = await this.cacheProvider.recover<
+      IExtendedCustomerIXC
+    >('customer');
+
+    if (recoveredCustomer) {
+      data = merge(recoveredCustomer, data);
+    }
+
+    await this.cacheProvider.save('customer', data);
   }
 }
 
-export default SignInHandler;
+export default IXCCustomersDetailsFinanceHandler;

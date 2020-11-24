@@ -58,7 +58,7 @@ describe('ExtractCustomersList', () => {
         expect.objectContaining({
           active: expect.any(Boolean),
           id: expect.any(String),
-          company_name: expect.any(String),
+          name: expect.any(String),
           fantasy_name: expect.any(String),
           document: expect.any(String),
           identity: expect.any(String),

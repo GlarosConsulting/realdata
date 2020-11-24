@@ -3,6 +3,7 @@ import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 import PuppeteerBrowserProvider from '@robot/shared/modules/browser/providers/BrowserProvider/implementations/PuppeteerBrowserProvider';
 
 import ixcConfig from '@config/ixc';
+import testingCustomersConfig from '@config/testing_customers';
 
 import AuthenticateUserService from '@modules/ixc/login/services/AuthenticateUserService';
 import NavigateToLogInPageService from '@modules/ixc/login/services/NavigateToLogInPageService';
@@ -51,11 +52,11 @@ describe('FindCustomerByField', () => {
 
     await navigateToCustomersPage.execute();
 
-    const testingCustomerData = ixcConfig.testing.customers[0];
+    const testingCustomerData = testingCustomersConfig[0];
 
     const customer = await findCustomerByField.execute({
       field: 'id',
-      value: testingCustomerData.id,
+      value: testingCustomerData.ixc.id,
     });
 
     expect(customer.name).toEqual(testingCustomerData.name);

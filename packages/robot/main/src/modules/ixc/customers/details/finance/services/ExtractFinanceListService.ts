@@ -6,11 +6,11 @@ import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 
 import parseDate from '@utils/parseDate';
 
-import IFinance from '@modules/ixc/customers/details/finance/models/IFinance';
+import IFinanceIXC from '@modules/ixc/customers/details/finance/models/IFinanceIXC';
 
 interface IExtractFinance
   extends Omit<
-    IFinance,
+    IFinanceIXC,
     | 'emission_date'
     | 'due_date'
     | 'payment_date'
@@ -25,13 +25,13 @@ interface IExtractFinance
 }
 
 @injectable()
-export default class ExtractCustomersListService {
+export default class ExtractFinanceListService {
   constructor(
     @inject('Page')
     private page: Page,
   ) {}
 
-  public async execute(): Promise<IFinance[]> {
+  public async execute(): Promise<IFinanceIXC[]> {
     const [
       findCustomersWindowTitleElement,
     ] = await this.page.findElementsByText('Cliente', 'div[@class="ftitle"]');
@@ -153,7 +153,7 @@ export default class ExtractCustomersListService {
       },
     );
 
-    const finances = extractedFinances.map<IFinance>(finance => ({
+    const finances = extractedFinances.map<IFinanceIXC>(finance => ({
       ...finance,
       emission_date: parseDate(finance.emission_date),
       due_date: parseDate(finance.due_date),

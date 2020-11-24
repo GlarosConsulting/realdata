@@ -12,6 +12,8 @@ import Launcher from '@shared/puppeteer/launcher';
 interface IArgv extends Argv {
   ixc_email: string;
   ixc_password: string;
+  ca_email: string;
+  ca_password: string;
   cache_key: string;
   headless: boolean;
   verbose: boolean;
@@ -29,13 +31,23 @@ usage('Usage: $0 <cmd> [options]')
         'ConfigurationProvider',
       );
 
-      const { ixc_email, ixc_password, ...argvRest } = argv;
+      const {
+        ixc_email,
+        ixc_password,
+        ca_email,
+        ca_password,
+        ...argvRest
+      } = argv;
 
       await configurationProvider.save({
         ...argvRest,
         ixc: {
           email: ixc_email,
           password: ixc_password,
+        },
+        conta_azul: {
+          email: ca_email,
+          password: ca_password,
         },
       });
 
@@ -60,6 +72,16 @@ usage('Usage: $0 <cmd> [options]')
   .option('ixc_password', {
     type: 'string',
     description: 'IXC account email password',
+    demandOption: true,
+  })
+  .option('ca_email', {
+    type: 'string',
+    description: 'Conta Azul account email',
+    demandOption: true,
+  })
+  .option('ca_password', {
+    type: 'string',
+    description: 'Conta Azul account email password',
     demandOption: true,
   })
   .option('cache_key', {

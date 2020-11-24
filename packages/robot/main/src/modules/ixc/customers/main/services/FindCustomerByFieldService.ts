@@ -9,7 +9,7 @@ import ICustomerIXC from '@modules/ixc/customers/main/models/ICustomerIXC';
 
 import ExtractCustomersListService from './ExtractCustomersListService';
 
-const FIELDS = {
+export const FIELDS = {
   id: 'ID',
 };
 
@@ -50,6 +50,10 @@ export default class FindCustomerByFieldService {
     const [findInputElement] = await this.page.findElementsBySelector(
       `div.modal2 > div > div.sDiv > div > input[placeholder="Consultar por ${FIELDS[field]}"]`,
     );
+
+    await this.page.driver.keyboard.press('Backspace');
+
+    await sleep(500);
 
     await this.page.typeToElement(findInputElement, value);
 
