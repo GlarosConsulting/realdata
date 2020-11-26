@@ -71,6 +71,8 @@ export default class FindCustomerByFieldService {
 
     const findCustomer = customers.find(customer => customer[field] === value);
 
+    await sleep(500);
+
     return findCustomer;
   }
 }

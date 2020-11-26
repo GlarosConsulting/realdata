@@ -5,13 +5,13 @@ import PuppeteerBrowserProvider from '@robot/shared/modules/browser/providers/Br
 import ixcConfig from '@config/ixc';
 import testingCustomersConfig from '@config/testing_customers';
 
+import OpenCustomerDetailsService from '@modules/ixc/customers/details/main/services/OpenCustomerDetailsService';
 import FindCustomerByFieldService from '@modules/ixc/customers/main/services/FindCustomerByFieldService';
 import NavigateToCustomersPageService from '@modules/ixc/customers/main/services/NavigateToCustomersPageService';
 import AuthenticateUserService from '@modules/ixc/login/services/AuthenticateUserService';
 import NavigateToLogInPageService from '@modules/ixc/login/services/NavigateToLogInPageService';
 
-import ExtractMainDetailsService from './ExtractMainDetailsService';
-import OpenCustomerDetailsService from './OpenCustomerDetailsService';
+import NavigateToContractTabService from './NavigateToContractTabService';
 
 let puppeteerBrowserProvider: PuppeteerBrowserProvider;
 let navigateToLogInPage: NavigateToLogInPageService;
@@ -19,16 +19,16 @@ let authenticateUser: AuthenticateUserService;
 let navigateToCustomersPage: NavigateToCustomersPageService;
 let findCustomerByField: FindCustomerByFieldService;
 let openCustomerDetails: OpenCustomerDetailsService;
-let extractMainDetails: ExtractMainDetailsService;
+let navigateToContractTab: NavigateToContractTabService;
 
 let browser: Browser;
 let page: Page;
 
-describe('ExtractMainDetails', () => {
+describe('NavigateToContractTab', () => {
   beforeAll(async () => {
     puppeteerBrowserProvider = new PuppeteerBrowserProvider();
 
-    browser = await puppeteerBrowserProvider.launch({ headless: false });
+    browser = await puppeteerBrowserProvider.launch();
   });
 
   beforeEach(async () => {
@@ -39,14 +39,14 @@ describe('ExtractMainDetails', () => {
     navigateToCustomersPage = new NavigateToCustomersPageService(page);
     findCustomerByField = new FindCustomerByFieldService(page);
     openCustomerDetails = new OpenCustomerDetailsService(page);
-    extractMainDetails = new ExtractMainDetailsService(page);
+    navigateToContractTab = new NavigateToContractTabService(page);
   });
 
   afterAll(async () => {
-    // await browser.close();
+    await browser.close();
   });
 
-  it('should be able to extract main customer details', async () => {
+  it('should be able to navigate to contract tab', async () => {
     await navigateToLogInPage.execute();
 
     const { email, password } = ixcConfig.testing.account;
@@ -58,7 +58,7 @@ describe('ExtractMainDetails', () => {
 
     await navigateToCustomersPage.execute();
 
-    const testingCustomerData = testingCustomersConfig[2];
+    const testingCustomerData = testingCustomersConfig[0];
 
     const customer = await findCustomerByField.execute({
       field: 'id',
@@ -67,11 +67,6 @@ describe('ExtractMainDetails', () => {
 
     await openCustomerDetails.execute({ customer_id: customer.id });
 
-    const mainDetails = await extractMainDetails.execute();
-
-    expect(mainDetails).toEqual({
-      birth_date: expect.any(Date),
-      person_type: testingCustomerData.ixc.details.main.person_type,
-    });
+    await navigateToContractTab.execute();
   });
 });

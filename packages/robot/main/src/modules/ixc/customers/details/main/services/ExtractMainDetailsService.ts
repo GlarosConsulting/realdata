@@ -5,11 +5,14 @@ import injectFunctions from '@robot/shared/modules/browser/infra/puppeteer/injec
 import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 
 import parseDate from '@utils/parseDate';
+import removeCharacters from '@utils/removeCharacters';
 
 import IMainDetailsIXC from '@modules/ixc/customers/details/main/models/IMainDetailsIXC';
 
-interface IExtractedMainDetailsIXC extends Omit<IMainDetailsIXC, 'birth_date'> {
+interface IExtractedMainDetailsIXC
+  extends Omit<IMainDetailsIXC, 'birth_date' | 'person_type'> {
   birth_date: string;
+  document: string;
 }
 
 @injectable()
@@ -37,15 +40,22 @@ export default class ExtractMainDetailsService {
       const birth_date = document.querySelector<HTMLInputElement>(
         '#data_nascimento',
       ).value;
+      const document_value = document.querySelector<HTMLInputElement>(
+        '#cnpj_cpf',
+      ).value;
 
       return {
         birth_date,
+        document: document_value,
       };
     });
 
     const mainDetails: IMainDetailsIXC = {
-      ...extractedMainDetails,
       birth_date: parseDate(extractedMainDetails.birth_date),
+      person_type:
+        removeCharacters(extractedMainDetails.document).length === 14
+          ? 'juridica'
+          : 'fisica',
     };
 
     return mainDetails;

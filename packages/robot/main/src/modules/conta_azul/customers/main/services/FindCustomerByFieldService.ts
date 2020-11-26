@@ -63,6 +63,7 @@ export default class FindCustomerByFieldService {
     try {
       await this.page.driver.waitForSelector(
         'body > div.ds-popover.ds-data-grid-advanced-filter-select-popover > div.ds-search-select.ds-multiple-select > div > div > div > div.ds-options__scrollable-options > div > div:nth-child(3)',
+        { timeout: 3000 },
       );
     } catch {
       return null;

@@ -8,6 +8,14 @@ interface IContaAzulConfig {
     customers: {
       url: string;
     };
+    contracts: {
+      main: {
+        url: string;
+      };
+      create: {
+        url: string;
+      };
+    };
     bills_to_receive: {
       url: string;
     };
@@ -28,6 +36,14 @@ export default {
     },
     customers: {
       url: 'https://app.contaazul.com/#/ca/pessoas/clientes',
+    },
+    contracts: {
+      main: {
+        url: 'https://app.contaazul.com/#/contratos',
+      },
+      create: {
+        url: 'https://app.contaazul.com/#/contratos/novo',
+      },
     },
     bills_to_receive: {
       url:

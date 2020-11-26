@@ -20,12 +20,26 @@ class ContaAzulBillsToReceiveDetailsPage
 
   public async fillData({
     account,
+    received_date,
+    discount,
+    interest,
+    paid,
+    transaction_id,
+    sell_id,
   }: IFillBillToReceiveDetailsDataDTO): Promise<void> {
     const fillBillToReceiveDetailsData = container.resolve(
       FillBillToReceiveDetailsDataService,
     );
 
-    await fillBillToReceiveDetailsData.execute({ account });
+    await fillBillToReceiveDetailsData.execute({
+      account,
+      received_date,
+      discount,
+      interest,
+      paid,
+      transaction_id,
+      sell_id,
+    });
   }
 }
 

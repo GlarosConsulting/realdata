@@ -1,3 +1,4 @@
+import { format, parseISO } from 'date-fns';
 import { injectable, inject } from 'tsyringe';
 
 import AppError from '@robot/shared/errors/AppError';
@@ -7,6 +8,12 @@ import sleep from '@utils/sleep';
 
 interface IRequest {
   account: string;
+  received_date: string;
+  discount: number;
+  interest: number;
+  paid: number;
+  transaction_id: string;
+  sell_id: string;
 }
 
 @injectable()
@@ -16,7 +23,15 @@ export default class FillBillToReceiveDetailsDataService {
     private page: Page,
   ) {}
 
-  public async execute({ account }: IRequest): Promise<void> {
+  public async execute({
+    account,
+    received_date,
+    discount,
+    interest,
+    paid,
+    transaction_id,
+    sell_id,
+  }: IRequest): Promise<void> {
     const [
       findBillsToPayDetailsIdentifierElement,
     ] = await this.page.findElementsBySelector('h3#newModalTitle');
@@ -27,21 +42,72 @@ export default class FillBillToReceiveDetailsDataService {
       );
     }
 
+    /* istanbul ignore next */
+    await this.page.evaluate(() => {
+      document.querySelector<HTMLInputElement>('#newIdConta').value = '';
+    });
+
     const [findAccountInputElement] = await this.page.findElementsBySelector(
       '#newIdConta',
     );
 
-    await findAccountInputElement.click();
-
-    await sleep(500);
-
-    await findAccountInputElement.type(account);
+    await this.page.typeToElement(findAccountInputElement, account);
 
     await sleep(1000);
 
-    await this.page.typeToElement(
-      findAccountInputElement,
-      String.fromCharCode(13),
+    await findAccountInputElement.press('Enter');
+
+    await sleep(500);
+
+    const [
+      findReceivedCheckboxElement,
+    ] = await this.page.findElementsBySelector(
+      '#formStatement > div.casual-values.showing > div:nth-child(3) > div.act-now-show-in-simplified-conciliation > label:nth-child(4) > div > span.checkbox.baixado',
     );
+
+    await findReceivedCheckboxElement.click();
+
+    const [
+      findReceivedDateDatePickerElement,
+    ] = await this.page.findElementsBySelector('#dtBaixa');
+
+    await this.page.typeToElement(
+      findReceivedDateDatePickerElement,
+      format(parseISO(received_date), 'dd/MM/yyyy'),
+    );
+
+    const [findDiscountInputElement] = await this.page.findElementsBySelector(
+      '#discount',
+    );
+
+    await this.page.typeToElement(findDiscountInputElement, String(discount));
+
+    const [findInterestInputElement] = await this.page.findElementsBySelector(
+      '#interest',
+    );
+
+    await this.page.typeToElement(findInterestInputElement, String(interest));
+
+    /* istanbul ignore next */
+    await this.page.evaluate(value => {
+      document.querySelector<HTMLInputElement>('#amountPaid').value = String(
+        value,
+      );
+    }, paid);
+
+    const [
+      findObservationsInputElement,
+    ] = await this.page.findElementsBySelector('#observacao');
+
+    await this.page.typeToElement(
+      findObservationsInputElement,
+      `ID transação: ${transaction_id} e ID venda: ${sell_id}`,
+    );
+
+    // const [findSaveButtonElement] = await this.page.findElementsBySelector(
+    //   '#finance-save-options > div.act-save > button.btn.save_form.btn-primary.addStatement',
+    // );
+
+    // await findSaveButtonElement.click();
   }
 }

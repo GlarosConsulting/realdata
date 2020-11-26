@@ -1,3 +1,5 @@
+import { addDays } from 'date-fns';
+
 import Browser from '@robot/shared/modules/browser/infra/puppeteer/models/Browser';
 import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 import PuppeteerBrowserProvider from '@robot/shared/modules/browser/providers/BrowserProvider/implementations/PuppeteerBrowserProvider';
@@ -5,24 +7,26 @@ import PuppeteerBrowserProvider from '@robot/shared/modules/browser/providers/Br
 import contaAzulConfig from '@config/conta_azul';
 import testingCustomersConfig from '@config/testing_customers';
 
+import formatIxcContractProductsToContaAzul from '@utils/formatIxcContractProductsToContaAzul';
+
 import NavigateToCustomersPageService from '@modules/conta_azul/customers/main/services/NavigateToCustomersPageService';
 import AuthenticateUserService from '@modules/conta_azul/login/services/AuthenticateUserService';
 import NavigateToLogInPageService from '@modules/conta_azul/login/services/NavigateToLogInPageService';
 
-import FillCreateCustomerDataService from './FillCreateCustomerDataService';
-import NavigateToCreateCustomerPageService from './NavigateToCreateCustomerPageService';
+import FillCreateContractDataService from './FillCreateContractDataService';
+import NavigateToCreateContractPageService from './NavigateToCreateContractPageService';
 
 let puppeteerBrowserProvider: PuppeteerBrowserProvider;
 let navigateToLogInPage: NavigateToLogInPageService;
 let authenticateUser: AuthenticateUserService;
 let navigateToCustomersPage: NavigateToCustomersPageService;
-let navigateToCreateCustomerPage: NavigateToCreateCustomerPageService;
-let fillCreateCustomerData: FillCreateCustomerDataService;
+let navigateToCreateContractPage: NavigateToCreateContractPageService;
+let fillCreateContractData: FillCreateContractDataService;
 
 let browser: Browser;
 let page: Page;
 
-describe('FillCreateCustomerData', () => {
+describe('FillCreateContractData', () => {
   beforeAll(async () => {
     puppeteerBrowserProvider = new PuppeteerBrowserProvider();
 
@@ -35,17 +39,17 @@ describe('FillCreateCustomerData', () => {
     navigateToLogInPage = new NavigateToLogInPageService(page);
     authenticateUser = new AuthenticateUserService(page);
     navigateToCustomersPage = new NavigateToCustomersPageService(page);
-    navigateToCreateCustomerPage = new NavigateToCreateCustomerPageService(
+    navigateToCreateContractPage = new NavigateToCreateContractPageService(
       page,
     );
-    fillCreateCustomerData = new FillCreateCustomerDataService(page);
+    fillCreateContractData = new FillCreateContractDataService(page);
   });
 
   afterAll(async () => {
     // await browser.close();
   });
 
-  it('should be able to navigate to customers page', async () => {
+  it('should be able to fill create contract data', async () => {
     await navigateToLogInPage.execute();
 
     const { email, password } = contaAzulConfig.testing.account;
@@ -57,28 +61,19 @@ describe('FillCreateCustomerData', () => {
 
     await navigateToCustomersPage.execute();
 
-    await navigateToCreateCustomerPage.execute();
+    await navigateToCreateContractPage.execute();
 
-    const testingCustomer = testingCustomersConfig[2];
+    const testingCustomer = testingCustomersConfig[0];
+    const testingContract = testingCustomer.ixc.details.contracts[0];
 
-    await fillCreateCustomerData.execute({
-      person_type: testingCustomer.ixc.details.main.person_type,
+    await fillCreateContractData.execute({
       document: testingCustomer.document,
-      name: testingCustomer.name,
-      fantasy_name: testingCustomer.ixc.fantasy_name,
-      ixc_id: testingCustomer.ixc.id,
-      additional_info: {
-        email: testingCustomer.ixc.details.contact.email,
-        phone_commercial: testingCustomer.ixc.details.contact.phone_commercial,
-        phone_mobile: testingCustomer.ixc.details.contact.phone_mobile,
-        birth_date: testingCustomer.ixc.details.main.birth_date.toISOString(),
-        identity: testingCustomer.ixc.identity,
-      },
-      address: {
-        cep: testingCustomer.ixc.details.address.cep,
-        number: testingCustomer.ixc.details.address.number,
-        complement: testingCustomer.ixc.details.address.complement,
-      },
+      category: 'Vendas',
+      sell_date: addDays(testingContract.activation_date, 2).toISOString(),
+      always_charge_on_day: 5,
+      products: formatIxcContractProductsToContaAzul([
+        ...testingContract.products.items,
+      ]),
     });
   });
 });

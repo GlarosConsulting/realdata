@@ -10,5 +10,6 @@ export default interface IExtendedCustomerIXC extends ICustomerIXC {
     address: IAddressIXC;
     contact: IContactIXC;
     finances: IFinanceIXC[];
+    contracts: IContractIXC[];
   };
 }

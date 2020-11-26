@@ -7,21 +7,19 @@ import contaAzulConfig from '@config/conta_azul';
 import sleep from '@utils/sleep';
 
 @injectable()
-export default class NavigateToBillsToReceivePageService {
+export default class NavigateToCustomersPageService {
   constructor(
     @inject('Page')
     private page: Page,
   ) {}
 
   public async execute(): Promise<void> {
-    await this.page.goTo(contaAzulConfig.pages.bills_to_receive.url);
+    await this.page.goTo(contaAzulConfig.pages.contracts.main.url);
 
     await this.page.driver.waitForSelector(
-      '#addFinance > button.btn.btn-primary.primary-action',
+      '#conteudo > div.row.ca-u-margin-top.ng-scope > div > div > div.col-xs-2 > button',
     );
 
-    await this.page.driver.waitForSelector('table > tbody > tr > td');
-
-    await sleep(1000);
+    await sleep(2000);
   }
 }
