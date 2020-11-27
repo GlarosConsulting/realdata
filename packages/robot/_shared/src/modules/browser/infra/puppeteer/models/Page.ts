@@ -63,7 +63,10 @@ class Page implements IPage<puppeteer.Page> {
   ): Promise<void> {
     await element.click();
 
-    await element.type(String(text), options);
+    await element.type(String(text), {
+      delay: 25,
+      ...options,
+    });
   }
 
   public async findElementsBySelector(

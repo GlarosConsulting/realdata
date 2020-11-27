@@ -24,13 +24,16 @@ export default class FillCreateContractDataService {
     private page: Page,
   ) {}
 
-  public async execute({
-    document: document_value,
-    category,
-    sell_date,
-    always_charge_on_day,
-    products,
-  }: IRequest): Promise<void> {
+  public async execute(
+    {
+      document: document_value,
+      category,
+      sell_date,
+      always_charge_on_day,
+      products,
+    }: IRequest,
+    dontSave = true,
+  ): Promise<void> {
     const [
       findCreateContractIdentifierElement,
     ] = await this.page.findElementsBySelector(
@@ -83,6 +86,8 @@ export default class FillCreateContractDataService {
       category,
       'ng-transclude/ca-row/ng-transclude/ca-col/ng-transclude/span',
     );
+
+    await sleep(1000);
 
     await findCategorySelectElement.click();
 
@@ -181,14 +186,13 @@ export default class FillCreateContractDataService {
         String(product.unit_value).replace('.', ','),
       );
     }
+    if (!dontSave) {
+      const [findSaveButtonElement] = await this.page.findElementsBySelector(
+        '#saveNegotiation',
+      );
 
-    // const [findSaveButtonElement] = await this.page.findElementsBySelector(
-    // 'body > div.ds-rollover.ds-rollover--is-opened >
-    // div.ds-rollover__body.has-footer > div > div > form > div > div >
-    // div.ds-footer.ds-rollover-footer > div > div > span > button',
-    // );
-
-    // await findSaveButtonElement.click();
+      await findSaveButtonElement.click();
+    }
 
     await sleep(1000);
   }

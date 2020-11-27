@@ -59,7 +59,7 @@ const MAPPED_PRODUCTS: IMappedProducts[] = [
         {
           column: 'service',
           value: {
-            equals: 'Telefone via Internet',
+            equals: 'Telefonia via Internet',
           },
         },
       ],
@@ -80,13 +80,36 @@ const MAPPED_PRODUCTS: IMappedProducts[] = [
         {
           column: 'service',
           value: {
-            equals: 'Telefone via Internet',
+            equals: 'Telefonia via Internet',
           },
         },
       ],
     ],
     conta_azul: {
       name: 'PABX Digital',
+    },
+  },
+  {
+    ixc: [
+      [
+        {
+          column: 'plan',
+          value: {
+            equals: 'DownloadR_100Mb_UploadR_100Mb',
+          },
+        },
+      ],
+      [
+        {
+          column: 'description',
+          value: {
+            contains: 'Serviço de Conexão à Internet',
+          },
+        },
+      ],
+    ],
+    conta_azul: {
+      name: 'Banda Larga Fiber 100Mbps Residencial',
     },
   },
   {
@@ -103,13 +126,36 @@ const MAPPED_PRODUCTS: IMappedProducts[] = [
         {
           column: 'description',
           value: {
-            equals: 'Serviço de Conexão à Internet - SCI',
+            contains: 'Serviço de Conexão à Internet',
           },
         },
       ],
     ],
     conta_azul: {
       name: 'Banda Larga Fiber 100Mbps Empresarial',
+    },
+  },
+  {
+    ixc: [
+      [
+        {
+          column: 'plan',
+          value: {
+            equals: 'DownloadR_200Mb_UploadR_200Mb',
+          },
+        },
+      ],
+      [
+        {
+          column: 'description',
+          value: {
+            contains: 'Serviço de Conexão à Internet',
+          },
+        },
+      ],
+    ],
+    conta_azul: {
+      name: 'Banda Larga Fiber 200Mbps Residencial',
     },
   },
   {
@@ -126,7 +172,7 @@ const MAPPED_PRODUCTS: IMappedProducts[] = [
         {
           column: 'description',
           value: {
-            equals: 'Serviço de Conexão à Internet - SCI',
+            contains: 'Serviço de Conexão à Internet',
           },
         },
       ],
@@ -137,51 +183,96 @@ const MAPPED_PRODUCTS: IMappedProducts[] = [
   },
 ];
 
+const validate = (product: IContractProductItem, filter: IFilterIXC) => {
+  const value = String(product[filter.column]).toLowerCase();
+
+  if (filter.value.equals) {
+    if (Array.isArray(filter.value.equals)) {
+      return filter.value.equals.some(
+        compare => value === compare.toLowerCase(),
+      );
+    }
+
+    return value === filter.value.equals.toLowerCase();
+  }
+
+  if (filter.value.contains) {
+    if (Array.isArray(filter.value.contains)) {
+      return filter.value.contains.some(compare =>
+        value.includes(compare.toLowerCase()),
+      );
+    }
+
+    return value.includes(filter.value.contains.toLowerCase());
+  }
+
+  return true;
+};
+
 export default function formatIxcContractProductsToContaAzul(
   ixcContractProducts: IContractProductItem[],
 ): IContractProductItemContaAzul[] {
   const products: IContractProductItemContaAzul[] = [];
 
-  ixcContractProducts.forEach(ixcProduct => {
-    const product = MAPPED_PRODUCTS.find(mappedProduct =>
-      mappedProduct.ixc.some(ixcFilters =>
-        ixcFilters.some(filter => {
-          const value = String(ixcProduct[filter.column]).toLowerCase();
+  const ignoreIds: string[] = [];
 
-          if (filter.value.equals) {
-            if (Array.isArray(filter.value.equals)) {
-              return filter.value.equals.some(
-                compare => value === compare.toLowerCase(),
-              );
-            }
+  for (const ixcContractProduct of ixcContractProducts) {
+    if (ignoreIds.includes(ixcContractProduct.id)) {
+      continue;
+    }
 
-            return value === filter.value.equals.toLowerCase();
-          }
+    let joinProducts: IContractProductItem[] = [];
 
-          if (filter.value.contains) {
-            if (Array.isArray(filter.value.contains)) {
-              return filter.value.contains.some(compare =>
-                value.includes(compare.toLowerCase()),
-              );
-            }
+    const findMappedProduct = MAPPED_PRODUCTS.find(mappedProduct => {
+      let filterJoinProducts: IContractProductItem[] = [];
 
-            return value.includes(filter.value.contains.toLowerCase());
-          }
+      if (mappedProduct.ixc.length <= 1) {
+        return mappedProduct.ixc.some(filters =>
+          filters.every(filter => validate(ixcContractProduct, filter)),
+        );
+      }
 
-          return true;
-        }),
-      ),
-    );
+      filterJoinProducts = ixcContractProducts.filter(item =>
+        mappedProduct.ixc.some(filters =>
+          filters.every(filter => validate(item, filter)),
+        ),
+      );
+
+      if (filterJoinProducts.length !== mappedProduct.ixc.length) {
+        return false;
+      }
+
+      joinProducts = filterJoinProducts;
+
+      const mappedIds = filterJoinProducts.map(joinProduct => joinProduct.id);
+
+      ignoreIds.push(...mappedIds);
+
+      return true;
+    });
+
+    if (!findMappedProduct) {
+      continue;
+    }
+
+    let { unit_value } = ixcContractProduct;
+
+    if (joinProducts.length !== 0) {
+      unit_value = joinProducts.reduce(
+        (value, product) => value + product.unit_value,
+        0,
+      );
+    }
 
     const contaAzulProduct: IContractProductItemContaAzul = {
-      name: product.conta_azul.name,
-      description: ixcProduct.description,
-      amount: ixcProduct.amount,
-      unit_value: ixcProduct.unit_value,
+      name: findMappedProduct.conta_azul.name,
+      description: ixcContractProduct.description,
+      amount: ixcContractProduct.amount,
+      unit_value,
     };
 
     products.push(contaAzulProduct);
-  });
+  }
 
   return products;
 }

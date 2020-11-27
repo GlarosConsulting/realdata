@@ -40,6 +40,10 @@ export default class FindBillsToReceiveByFieldService {
       throw new AppError('You should be in bills to pay page.');
     }
 
+    await this.page.driver.waitForSelector(
+      '#conteudo > div > div.menu-container > div.col-xs-9.no-padding.content-container > div > div.filter-header.no-margin-top.btn-toolbar > div.input-append.float-right > div > button',
+    );
+
     await sleep(1000);
 
     const [
@@ -49,6 +53,8 @@ export default class FindBillsToReceiveByFieldService {
     );
 
     await findSearchFieldsDropdownElement.click();
+
+    await this.page.driver.waitForSelector(FIELDS[field]);
 
     const [findInputElement] = await this.page.findElementsBySelector(
       FIELDS[field],

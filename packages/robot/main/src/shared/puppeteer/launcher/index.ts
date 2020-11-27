@@ -1,3 +1,4 @@
+import { addDays, isAfter, isBefore, set as setDate, subDays } from 'date-fns';
 import { container, injectable, inject } from 'tsyringe';
 
 import Browser from '@robot/shared/modules/browser/infra/puppeteer/models/Browser';
@@ -5,14 +6,17 @@ import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 import IBrowser from '@robot/shared/modules/browser/models/IBrowser';
 import IBrowserProvider from '@robot/shared/modules/browser/providers/BrowserProvider/models/IBrowserProvider';
 
+import formatIxcContractProductsToContaAzul from '@utils/formatIxcContractProductsToContaAzul';
 import Timer from '@utils/timer';
 
 import ICacheProvider from '@shared/container/providers/CacheProvider/models/ICacheProvider';
 import IConfigurationProvider from '@shared/container/providers/ConfigurationProvider/models/IConfigurationProvider';
 import IExtendedCustomerIXC from '@shared/models/IExtendedCustomerIXC';
+import api from '@shared/services/api';
 
 import ContaAzulBillsToReceiveDetailsPage from '@modules/conta_azul/bills_to_receive/details/infra/puppeteer/pages/ContaAzulBillsToReceiveDetailsPage';
 import ContaAzulBillToReceiveMainPage from '@modules/conta_azul/bills_to_receive/main/infra/puppeteer/pages/ContaAzulBillToReceiveMainPage';
+import ContaAzulContractsCreatePage from '@modules/conta_azul/contracts/create/infra/puppeteer/pages/ContaAzulContractsCreatePage';
 import ContaAzulCustomersCreatePage from '@modules/conta_azul/customers/create/infra/puppeteer/pages/ContaAzulCustomersCreatePage';
 import ContaAzulCustomersMainPage from '@modules/conta_azul/customers/main/infra/puppeteer/pages/ContaAzulCustomersMainPage';
 import ContaAzulLogInHandler from '@modules/conta_azul/login/infra/handlers';
@@ -63,7 +67,9 @@ export default class Launcher {
     };
 
     // const ixcIds = testingCustomersConfig.map(customer => customer.ixc.id);
-    const ixcIds = ['14211'];
+    // const ixcIds = ['14211']; // GLAROS
+    // const ixcIds = ['10902']; // LUCAS SILVA NERES
+    const ixcIds = ['12636']; // KARLA ANGELINA
 
     console.log('IDs:', ixcIds);
 
@@ -124,6 +130,7 @@ export default class Launcher {
 
       console.log('IXC ID:', ixcId);
       console.log(JSON.stringify(extendedCustomerIxc));
+      console.log();
 
       switchPage(page2);
 
@@ -163,6 +170,40 @@ export default class Launcher {
         });
       }
 
+      const contaAzulContractsCreatePage = new ContaAzulContractsCreatePage();
+
+      for (const contract of extendedCustomerIxc.details.contracts.filter(
+        item => item.status,
+      )) {
+        await contaAzulContractsCreatePage.navigateTo();
+
+        let always_charge_on_day: number;
+
+        if (isBefore(contract.activation_date, new Date(2020, 10, 13))) {
+          if (contract.activation_date.getDate() <= 5) {
+            always_charge_on_day = 5;
+          } else if (contract.activation_date.getDate() >= 6) {
+            always_charge_on_day = contract.activation_date.getDate();
+          }
+        } else if (contract.activation_date.getDate() <= 26) {
+          always_charge_on_day = contract.activation_date.getDate();
+        } else if (contract.activation_date.getDate() >= 27) {
+          always_charge_on_day = 26;
+        }
+
+        await contaAzulContractsCreatePage.create({
+          document: extendedCustomerIxc.document,
+          category: 'Vendas',
+          sell_date: setDate(contract.activation_date, {
+            date: always_charge_on_day + 1,
+          }).toISOString(),
+          always_charge_on_day,
+          products: formatIxcContractProductsToContaAzul(
+            contract.products.items,
+          ),
+        });
+      }
+
       const contaAzulBillToReceiveMainPage = new ContaAzulBillToReceiveMainPage();
 
       await contaAzulBillToReceiveMainPage.navigateTo();
@@ -172,17 +213,64 @@ export default class Launcher {
         value: extendedCustomerIxc.name,
       });
 
-      if (billsToReceive.length > 0) {
-        const contaAzulBillsToReceiveDetailsPage = new ContaAzulBillsToReceiveDetailsPage();
+      const contaAzulBillsToReceiveDetailsPage = new ContaAzulBillsToReceiveDetailsPage();
 
-        const billToReceive = billsToReceive[0];
-        const finance = extendedCustomerIxc.details.finances[2];
+      for (const billToReceive of billsToReceive) {
+        const filterReceivedBills = extendedCustomerIxc.details.finances.filter(
+          receivedBill => {
+            const dateLessThreeDays = subDays(billToReceive.date, 3);
+            const dateMoreThreeDays = addDays(billToReceive.date, 3);
+
+            if (
+              (billToReceive.launch.customer_name ===
+                extendedCustomerIxc.name ||
+                billToReceive.launch.customer_name ===
+                  extendedCustomerIxc.fantasy_name) &&
+              billToReceive.value === receivedBill.value &&
+              isAfter(receivedBill.due_date, dateLessThreeDays) &&
+              isBefore(receivedBill.due_date, dateMoreThreeDays)
+            ) {
+              return true;
+            }
+
+            return false;
+          },
+        );
+
+        console.log();
+
+        if (filterReceivedBills.length === 0) {
+          console.log('Not found any received bills...');
+          console.log('Bill To Receive: ', billToReceive);
+          console.log();
+
+          await api.post('/logs', {
+            date: new Date(),
+            ixc_id: `${extendedCustomerIxc.id} - ${extendedCustomerIxc.name}`,
+            projection_id: billToReceive.sell_id,
+            conta_azul_existing: true,
+            discharge_performed: false,
+          });
+
+          continue;
+        }
+
+        if (filterReceivedBills.length > 1) {
+          console.log('Found multiple received bills...');
+          console.log();
+
+          continue;
+        }
+
+        const finance = filterReceivedBills[0];
+
+        // console.log('Bill To Receive: ', billToReceive);
+        // console.log('IXC Filter Bills To Receive: ', filterReceivedBills);
+        // console.log();
 
         await contaAzulBillsToReceiveDetailsPage.open({
           bill_to_receive_sell_id: billToReceive.sell_id,
         });
-
-        console.log(finance.received_date);
 
         await contaAzulBillsToReceiveDetailsPage.fillData({
           account: 'Sicoob Crediuna',
@@ -195,7 +283,7 @@ export default class Launcher {
         });
       }
 
-      await page2.driver.reload();
+      // await page2.driver.reload();
     }
 
     timer.stop();

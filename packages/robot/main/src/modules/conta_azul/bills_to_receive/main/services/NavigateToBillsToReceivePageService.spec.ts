@@ -21,7 +21,7 @@ describe('NavigateToBillsToReceivePage', () => {
   beforeAll(async () => {
     puppeteerBrowserProvider = new PuppeteerBrowserProvider();
 
-    browser = await puppeteerBrowserProvider.launch();
+    browser = await puppeteerBrowserProvider.launch({ headless: false });
   });
 
   beforeEach(async () => {
@@ -35,7 +35,7 @@ describe('NavigateToBillsToReceivePage', () => {
   });
 
   afterAll(async () => {
-    await browser.close();
+    // await browser.close();
   });
 
   it('should be able to navigate to bills to receive page', async () => {

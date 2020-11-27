@@ -23,15 +23,19 @@ export default class FillBillToReceiveDetailsDataService {
     private page: Page,
   ) {}
 
-  public async execute({
-    account,
-    received_date,
-    discount,
-    interest,
-    paid,
-    transaction_id,
-    sell_id,
-  }: IRequest): Promise<void> {
+  public async execute(
+    {
+      account,
+      received_date,
+      discount,
+      interest,
+      paid,
+      transaction_id,
+      sell_id,
+    }: IRequest,
+    dontSave = true,
+    close = true,
+  ): Promise<void> {
     const [
       findBillsToPayDetailsIdentifierElement,
     ] = await this.page.findElementsBySelector('h3#newModalTitle');
@@ -104,10 +108,20 @@ export default class FillBillToReceiveDetailsDataService {
       `ID transação: ${transaction_id} e ID venda: ${sell_id}`,
     );
 
-    // const [findSaveButtonElement] = await this.page.findElementsBySelector(
-    //   '#finance-save-options > div.act-save > button.btn.save_form.btn-primary.addStatement',
-    // );
+    await sleep(1000);
 
-    // await findSaveButtonElement.click();
+    if (!dontSave) {
+      const [findSaveButtonElement] = await this.page.findElementsBySelector(
+        '#finance-save-options > div.act-save > button.btn.save_form.btn-primary.addStatement',
+      );
+
+      await findSaveButtonElement.click();
+    } else if (close) {
+      const [findCloseButtonElement] = await this.page.findElementsBySelector(
+        '#newPopupManagerReplacement > div.modal-header > button',
+      );
+
+      await findCloseButtonElement.click();
+    }
   }
 }

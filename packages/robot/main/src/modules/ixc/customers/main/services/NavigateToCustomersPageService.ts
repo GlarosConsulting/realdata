@@ -24,7 +24,7 @@ export default class NavigateToCustomersPageService {
 
     await findRegistersDropdownButtonMenuElement.click();
 
-    await sleep(1000);
+    await sleep(2000);
 
     const [findCustomersButtonMenuElement] = await this.page.findElementsByText(
       'Clientes',

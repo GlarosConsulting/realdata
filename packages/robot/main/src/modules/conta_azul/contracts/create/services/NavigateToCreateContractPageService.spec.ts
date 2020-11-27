@@ -17,7 +17,7 @@ let navigateToCreateContractPage: NavigateToCreateContractPageService;
 let browser: Browser;
 let page: Page;
 
-describe('NavigateToContractsPage', () => {
+describe('NavigateToCreateContractPage', () => {
   beforeAll(async () => {
     puppeteerBrowserProvider = new PuppeteerBrowserProvider();
 

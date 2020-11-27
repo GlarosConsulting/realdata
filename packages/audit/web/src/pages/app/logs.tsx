@@ -109,7 +109,7 @@ export const getStaticProps: GetStaticProps<IAppProps> = async () => {
     props: {
       logs: response.data,
     },
-    revalidate: 10,
+    revalidate: 5,
   };
 };
 

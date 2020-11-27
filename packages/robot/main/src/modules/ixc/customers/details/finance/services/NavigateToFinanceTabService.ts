@@ -3,6 +3,8 @@ import { injectable, inject } from 'tsyringe';
 import AppError from '@robot/shared/errors/AppError';
 import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 
+import sleep from '@utils/sleep';
+
 @injectable()
 export default class NavigateToFinanceTabService {
   constructor(
@@ -22,6 +24,8 @@ export default class NavigateToFinanceTabService {
         'You should be with the customer details window opened.',
       );
     }
+
+    await sleep(500);
 
     const [
       findFinanceTabButtonElement,

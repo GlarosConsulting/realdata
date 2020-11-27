@@ -63,7 +63,7 @@ describe('FillCreateContractData', () => {
 
     await navigateToCreateContractPage.execute();
 
-    const testingCustomer = testingCustomersConfig[0];
+    const testingCustomer = testingCustomersConfig[3];
     const testingContract = testingCustomer.ixc.details.contracts[0];
 
     await fillCreateContractData.execute({

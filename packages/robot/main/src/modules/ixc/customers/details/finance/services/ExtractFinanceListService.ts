@@ -61,10 +61,7 @@ export default class ExtractFinanceListService {
 
         tableRows.forEach(row => {
           const id = getTextBySelector('td[abbr="fn_areceber.id"] > div', row);
-          const status = getTextBySelector(
-            'td[abbr="fn_areceber.status"] > div > font',
-            row,
-          );
+          const status = getTextBySelector('td:nth-child(2) > div', row);
           const charge = getTextBySelector(
             'td[abbr="fn_areceber.id_carteira_cobranca"] > div',
             row,
@@ -125,6 +122,8 @@ export default class ExtractFinanceListService {
             'td[abbr="fn_areceber.tipo_recebimento"] > div',
             row,
           );
+
+          console.log(status);
 
           const finance: IExtractFinance = {
             id,

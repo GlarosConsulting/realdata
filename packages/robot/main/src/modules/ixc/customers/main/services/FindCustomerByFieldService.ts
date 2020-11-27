@@ -63,9 +63,13 @@ export default class FindCustomerByFieldService {
 
     await sleep(500);
 
+    await this.page.typeToElement(findInputElement, String.fromCharCode(13));
+
     await this.page.driver.waitForSelector(
       'div.modal2 div.bDiv table tbody tr',
     );
+
+    await sleep(1000);
 
     const customers = await this.extractCustomersList.execute();
 

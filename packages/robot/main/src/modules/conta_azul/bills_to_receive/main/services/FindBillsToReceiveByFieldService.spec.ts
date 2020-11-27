@@ -3,6 +3,7 @@ import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 import PuppeteerBrowserProvider from '@robot/shared/modules/browser/providers/BrowserProvider/implementations/PuppeteerBrowserProvider';
 
 import contaAzulConfig from '@config/conta_azul';
+import testingCustomersConfig from '@config/testing_customers';
 
 import AuthenticateUserService from '@modules/conta_azul/login/services/AuthenticateUserService';
 import NavigateToLogInPageService from '@modules/conta_azul/login/services/NavigateToLogInPageService';
@@ -23,7 +24,7 @@ describe('FindBillsToReceiveByField', () => {
   beforeAll(async () => {
     puppeteerBrowserProvider = new PuppeteerBrowserProvider();
 
-    browser = await puppeteerBrowserProvider.launch();
+    browser = await puppeteerBrowserProvider.launch({ headless: false });
   });
 
   beforeEach(async () => {
@@ -38,7 +39,7 @@ describe('FindBillsToReceiveByField', () => {
   });
 
   afterAll(async () => {
-    await browser.close();
+    // await browser.close();
   });
 
   it('should be able to find bills to receive by field', async () => {
@@ -53,7 +54,7 @@ describe('FindBillsToReceiveByField', () => {
 
     await navigateToBillsToReceivePage.execute();
 
-    const testingCustomer = contaAzulConfig.testing.customers[0];
+    const testingCustomer = testingCustomersConfig[0];
 
     const billsToReceiveByField = await findBillsToReceiveByField.execute({
       field: 'launch.customer_name',

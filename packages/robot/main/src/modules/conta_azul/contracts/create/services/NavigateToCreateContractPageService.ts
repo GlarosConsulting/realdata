@@ -7,7 +7,7 @@ import contaAzulConfig from '@config/conta_azul';
 import sleep from '@utils/sleep';
 
 @injectable()
-export default class NavigateToCustomersPageService {
+export default class NavigateToCreateContractPageService {
   constructor(
     @inject('Page')
     private page: Page,

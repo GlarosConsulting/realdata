@@ -22,6 +22,63 @@ export default class NavigateToBillsToReceivePageService {
 
     await this.page.driver.waitForSelector('table > tbody > tr > td');
 
+    await sleep(2000);
+
+    /* istanbul ignore next */
+    await this.page.evaluate(() => {
+      document
+        .querySelector<HTMLElement>(
+          '#financeTopFilters > div.btn-group.min-margin.periodSelector > ul > li:nth-child(5) > a',
+        )
+        .click();
+    });
+
+    await this.page.driver.waitForSelector('table > tbody > tr > td');
+
+    await sleep(2000);
+
+    const [findFiltersButtonElement] = await this.page.findElementsBySelector(
+      '#type-filter-controller',
+    );
+
+    await findFiltersButtonElement.click();
+
+    await this.page.driver.waitForSelector(
+      '#type-filter > ul > li.tgt-all-children > a',
+    );
+
+    const [findAllFilterOptionElement] = await this.page.findElementsBySelector(
+      '#type-filter > ul > li.tgt-all-children > a',
+    );
+
+    await findAllFilterOptionElement.click();
+
+    const [
+      findExpiredFilterOptionElement,
+    ] = await this.page.findElementsBySelector(
+      '#typeFilterContainer > li.EXPIRED > a',
+    );
+
+    await findExpiredFilterOptionElement.click();
+
+    const [
+      findOpenStatementsFilterOptionElement,
+    ] = await this.page.findElementsBySelector(
+      '#typeFilterContainer > li.OPENSTATEMENTS > a',
+    );
+
+    await findOpenStatementsFilterOptionElement.click();
+
+    const [
+      findApplyFiltersButtonElements,
+    ] = await this.page.findElementsBySelector(
+      '#type-filter > ul > li.row.vertical-offset1 > div > button',
+    );
+
+    await findApplyFiltersButtonElements.click();
+
+    await this.page.driver.waitForSelector('table > tbody > tr > td');
+
     await sleep(1000);
   }
 }

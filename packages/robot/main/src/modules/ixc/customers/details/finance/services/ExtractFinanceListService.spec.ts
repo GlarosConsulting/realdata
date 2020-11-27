@@ -3,6 +3,7 @@ import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 import PuppeteerBrowserProvider from '@robot/shared/modules/browser/providers/BrowserProvider/implementations/PuppeteerBrowserProvider';
 
 import ixcConfig from '@config/ixc';
+import testingCustomersConfig from '@config/testing_customers';
 
 import OpenCustomerDetailsService from '@modules/ixc/customers/details/main/services/OpenCustomerDetailsService';
 import FindCustomerByFieldService from '@modules/ixc/customers/main/services/FindCustomerByFieldService';
@@ -60,14 +61,14 @@ describe('ExtractFinanceList', () => {
 
     await navigateToCustomersPage.execute();
 
-    const testingCustomerData = ixcConfig.testing.customers[0];
+    const testingCustomerData = testingCustomersConfig[0];
 
     const customer = await findCustomerByField.execute({
       field: 'id',
-      value: testingCustomerData.id,
+      value: testingCustomerData.ixc.id,
     });
 
-    await openCustomerDetails.execute({ customer });
+    await openCustomerDetails.execute({ customer_id: customer.id });
 
     await navigateToFinanceTab.execute();
 
