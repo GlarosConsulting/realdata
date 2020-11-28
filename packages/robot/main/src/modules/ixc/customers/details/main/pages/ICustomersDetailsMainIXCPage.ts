@@ -6,5 +6,6 @@ import IOpenCustomerDetailsDTO from '../dtos/IOpenCustomerDetailsDTO';
 
 export default interface ICustomersDetailsMainIXCPage extends IRobotPage {
   open(data: IOpenCustomerDetailsDTO): Promise<void>;
+  close(): Promise<void>;
   getMainDetails(): Promise<IMainDetailsIXC>;
 }

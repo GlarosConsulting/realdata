@@ -62,7 +62,7 @@ export default class FindBillsToReceiveByFieldService {
 
     await this.page.typeToElement(findInputElement, value);
 
-    await sleep(500);
+    await sleep(1000);
 
     await this.page.typeToElement(findInputElement, String.fromCharCode(13));
 

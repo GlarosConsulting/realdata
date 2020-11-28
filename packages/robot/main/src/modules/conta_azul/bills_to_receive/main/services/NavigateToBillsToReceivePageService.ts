@@ -43,6 +43,8 @@ export default class NavigateToBillsToReceivePageService {
 
     await findFiltersButtonElement.click();
 
+    await sleep(500);
+
     await this.page.driver.waitForSelector(
       '#type-filter > ul > li.tgt-all-children > a',
     );
@@ -53,6 +55,8 @@ export default class NavigateToBillsToReceivePageService {
 
     await findAllFilterOptionElement.click();
 
+    await sleep(500);
+
     const [
       findExpiredFilterOptionElement,
     ] = await this.page.findElementsBySelector(
@@ -60,6 +64,8 @@ export default class NavigateToBillsToReceivePageService {
     );
 
     await findExpiredFilterOptionElement.click();
+
+    await sleep(500);
 
     const [
       findOpenStatementsFilterOptionElement,
@@ -69,6 +75,8 @@ export default class NavigateToBillsToReceivePageService {
 
     await findOpenStatementsFilterOptionElement.click();
 
+    await sleep(500);
+
     const [
       findApplyFiltersButtonElements,
     ] = await this.page.findElementsBySelector(
@@ -76,6 +84,8 @@ export default class NavigateToBillsToReceivePageService {
     );
 
     await findApplyFiltersButtonElements.click();
+
+    await sleep(500);
 
     await this.page.driver.waitForSelector('table > tbody > tr > td');
 

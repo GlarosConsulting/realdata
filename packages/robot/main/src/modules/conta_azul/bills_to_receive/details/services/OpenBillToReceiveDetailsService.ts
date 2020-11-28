@@ -27,6 +27,8 @@ export default class OpenBillToReceiveDetailsService {
       throw new AppError('You should be in bills to pay page.');
     }
 
+    await sleep(500);
+
     /* istanbul ignore next */
     await this.page.evaluate(async id => {
       const elements = document.querySelectorAll<HTMLElement>(
@@ -55,6 +57,8 @@ export default class OpenBillToReceiveDetailsService {
         findElement.click();
       }
     }, bill_to_receive_sell_id);
+
+    await sleep(500);
 
     await this.page.driver.waitForSelector('h3#newModalTitle');
 

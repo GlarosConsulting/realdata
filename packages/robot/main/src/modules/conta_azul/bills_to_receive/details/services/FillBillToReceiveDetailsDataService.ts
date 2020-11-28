@@ -75,6 +75,8 @@ export default class FillBillToReceiveDetailsDataService {
 
     await findReceivedCheckboxElement.click();
 
+    await sleep(500);
+
     const [
       findReceivedDateDatePickerElement,
     ] = await this.page.findElementsBySelector('#dtBaixa');
@@ -83,6 +85,8 @@ export default class FillBillToReceiveDetailsDataService {
       findReceivedDateDatePickerElement,
       format(parseISO(received_date), 'dd/MM/yyyy'),
     );
+
+    await sleep(500);
 
     const [findDiscountInputElement] = await this.page.findElementsBySelector(
       '#discount',
@@ -93,6 +97,8 @@ export default class FillBillToReceiveDetailsDataService {
       String(discount).replace('.', ','),
     );
 
+    await sleep(500);
+
     const [findInterestInputElement] = await this.page.findElementsBySelector(
       '#interest',
     );
@@ -102,12 +108,16 @@ export default class FillBillToReceiveDetailsDataService {
       String(interest).replace('.', ','),
     );
 
+    await sleep(500);
+
     /* istanbul ignore next */
     await this.page.evaluate(value => {
       document.querySelector<HTMLInputElement>('#amountPaid').value = String(
         value,
       ).replace('.', ',');
     }, paid);
+
+    await sleep(500);
 
     const [
       findObservationsInputElement,
