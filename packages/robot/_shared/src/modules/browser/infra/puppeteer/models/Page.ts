@@ -53,7 +53,10 @@ class Page implements IPage<puppeteer.Page> {
 
     await this.driver.click(selector);
 
-    await this.driver.type(selector, String(text), options);
+    await this.driver.type(selector, String(text), {
+      delay: 50,
+      ...options,
+    });
   }
 
   public async typeToElement(
@@ -64,7 +67,7 @@ class Page implements IPage<puppeteer.Page> {
     await element.click();
 
     await element.type(String(text), {
-      delay: 25,
+      delay: 50,
       ...options,
     });
   }

@@ -29,7 +29,10 @@ export default class FindCustomerByFieldService {
     this.extractCustomersList = new ExtractCustomersListService(page);
   }
 
-  public async execute({ field, value }: IRequest): Promise<ICustomerIXC> {
+  public async execute({
+    field,
+    value,
+  }: IRequest): Promise<ICustomerIXC | null> {
     const [
       findCustomersWindowTitleElement,
     ] = await this.page.findElementsByText('Cliente', 'div[@class="ftitle"]');
@@ -65,9 +68,16 @@ export default class FindCustomerByFieldService {
 
     await this.page.typeToElement(findInputElement, String.fromCharCode(13));
 
-    await this.page.driver.waitForSelector(
-      'div.modal2 div.bDiv table tbody tr',
-    );
+    try {
+      await this.page.driver.waitForSelector(
+        'div.modal2 div.bDiv table tbody tr',
+        {
+          timeout: 3000,
+        },
+      );
+    } catch {
+      return null;
+    }
 
     await sleep(1000);
 

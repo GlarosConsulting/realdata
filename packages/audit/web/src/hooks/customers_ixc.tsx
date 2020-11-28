@@ -72,7 +72,9 @@ function useCustomersIxc(): ICustomersIXCContextData {
   const context = useContext(CustomersIXCContext);
 
   if (!context) {
-    throw new Error("'useTasks' must be used within an 'CustomersIXCProvider'");
+    throw new Error(
+      "'useCustomersIxc' must be used within an 'CustomersIXCProvider'",
+    );
   }
 
   return context;

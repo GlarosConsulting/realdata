@@ -2,10 +2,13 @@ import React from 'react';
 
 import { AuthenticationProvider } from './authentication';
 import { CustomersIXCProvider } from './customers_ixc';
+import { LogsProvider } from './logs';
 
 const AppProvider: React.FC = ({ children }) => (
   <AuthenticationProvider>
-    <CustomersIXCProvider>{children}</CustomersIXCProvider>
+    <LogsProvider>
+      <CustomersIXCProvider>{children}</CustomersIXCProvider>
+    </LogsProvider>
   </AuthenticationProvider>
 );
 

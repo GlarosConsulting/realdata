@@ -186,6 +186,7 @@ export default class FillCreateContractDataService {
         String(product.unit_value).replace('.', ','),
       );
     }
+
     if (!dontSave) {
       const [findSaveButtonElement] = await this.page.findElementsBySelector(
         '#saveNegotiation',
@@ -194,6 +195,10 @@ export default class FillCreateContractDataService {
       await findSaveButtonElement.click();
     }
 
-    await sleep(1000);
+    await sleep(2000);
+
+    await this.page.driver.waitForSelector(
+      '#conteudo > div:nth-child(1) > div:nth-child(2) > button',
+    );
   }
 }

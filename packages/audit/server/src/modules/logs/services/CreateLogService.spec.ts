@@ -12,7 +12,7 @@ describe('CreateLog', () => {
   });
 
   it('should be able to create log', async () => {
-    const customerIxc = await createLog.execute({
+    const log = await createLog.execute({
       date: new Date(),
       ixc_id: '123',
       projection_id: '321',
@@ -20,7 +20,7 @@ describe('CreateLog', () => {
       discharge_performed: true,
     });
 
-    expect(customerIxc).toEqual(
+    expect(log).toEqual(
       expect.objectContaining({
         date: expect.any(Date),
         ixc_id: expect.any(String),

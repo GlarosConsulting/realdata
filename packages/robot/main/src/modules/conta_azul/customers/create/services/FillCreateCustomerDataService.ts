@@ -142,7 +142,7 @@ export default class FillCreateCustomerDataService {
         'body > div.ds-rollover.ds-rollover--is-opened > div.ds-rollover__body.has-footer > div > div > form > div > div > div:nth-child(3) > div > div > div.ds-height-transition.ds-collapse-body > div > div > div > div:nth-child(1) > div.ds-col.ds-col-6 > div > div > input',
       );
 
-      await this.page.typeToElement(findRazaoSocialInputElement, fantasy_name);
+      await this.page.typeToElement(findRazaoSocialInputElement, name);
 
       const [
         findInscricaoEstadualInputElement,
@@ -230,6 +230,10 @@ export default class FillCreateCustomerDataService {
       await findSaveButtonElement.click();
     }
 
-    await sleep(1000);
+    await sleep(2000);
+
+    await this.page.driver.waitForSelector(
+      '#gateway > section > div > div.ds-page > div > div > div > div.ds-row.ds-data-grid__table-container > div > div > table > tbody > tr > td:nth-child(2)',
+    );
   }
 }

@@ -5,5 +5,5 @@ import ICustomerIXC from '@modules/ixc/customers/main/models/ICustomerIXC';
 
 export default interface ICustomersMainIXCPage extends IRobotPage {
   getAll(): Promise<ICustomerIXC[]>;
-  findByField(data: IFindCustomerByFieldDTO): Promise<ICustomerIXC>;
+  findByField(data: IFindCustomerByFieldDTO): Promise<ICustomerIXC | null>;
 }

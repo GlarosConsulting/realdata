@@ -1,19 +1,18 @@
-import { GetStaticProps } from 'next';
 import { useRouter } from 'next/router';
 import React, { useCallback, useMemo } from 'react';
 import { FiUsers } from 'react-icons/fi';
 import { Column } from 'react-table';
 
-import { Box, Button, Tooltip, useTheme } from '@chakra-ui/core';
+import { Box, Button, Text, Tooltip, useTheme } from '@chakra-ui/core';
 import { format, parseISO } from 'date-fns';
 
 import SEO from '@/components/SEO';
 import Sidebar from '@/components/Sidebar';
 import Table from '@/components/Table';
 import Title from '@/components/Title';
+import { useLogs } from '@/hooks/logs';
 import ILog from '@/interfaces/logs/ILog';
 import ILogFormatted from '@/interfaces/logs/ILogFormatted';
-import fetch from '@/lib/fetch';
 
 const COLUMNS = [
   {
@@ -38,27 +37,41 @@ const COLUMNS = [
   },
 ] as Column[];
 
-interface IAppProps {
-  logs: ILog[];
+interface ILogFormattedWithComponents
+  extends Omit<ILogFormatted, 'discharge_performed_formatted'> {
+  discharge_performed_formatted: React.ReactNode;
 }
 
-const App: React.FC<IAppProps> = ({ logs }) => {
+const Logs: React.FC = () => {
   const theme = useTheme();
 
   const router = useRouter();
+
+  const { logs, performDischarge } = useLogs();
 
   const handleGoToCustomersIXC = useCallback(() => {
     router.replace('/app/ixc');
   }, []);
 
+  const handlePerformDischarge = useCallback(async (log: ILog) => {
+    await performDischarge(log);
+  }, []);
+
   const formattedLogs = useMemo(
     () =>
-      logs.map<ILogFormatted>(log => ({
+      logs?.map<ILogFormattedWithComponents>(log => ({
         ...log,
         date_formatted: format(parseISO(log.date), 'dd/MM/yyyy'),
         conta_azul_existing_formatted: log.conta_azul_existing ? 'Sim' : 'Não',
-        discharge_performed_formatted: log.discharge_performed ? 'Sim' : 'Não',
-      })),
+        discharge_performed_formatted: (
+          <>
+            <Text width={10}>{log.discharge_performed ? 'Sim' : 'Não'}</Text>
+            <Button onClick={() => handlePerformDischarge(log)}>
+              Alternar
+            </Button>
+          </>
+        ),
+      })) || [],
     [logs],
   );
 
@@ -95,22 +108,11 @@ const App: React.FC<IAppProps> = ({ logs }) => {
         <Box>
           <Title>Histórico</Title>
 
-          <Table columns={COLUMNS} data={formattedLogs} pageSize={5} />
+          <Table columns={COLUMNS} data={formattedLogs} />
         </Box>
       </Box>
     </>
   );
 };
 
-export const getStaticProps: GetStaticProps<IAppProps> = async () => {
-  const response = await fetch<ILog[]>('/logs');
-
-  return {
-    props: {
-      logs: response.data,
-    },
-    revalidate: 5,
-  };
-};
-
-export default App;
+export default Logs;

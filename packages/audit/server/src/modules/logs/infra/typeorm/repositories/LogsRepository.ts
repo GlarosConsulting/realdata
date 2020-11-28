@@ -13,7 +13,11 @@ class LogsRepository implements ILogsRepository {
   }
 
   public async findAll(): Promise<Log[]> {
-    return this.ormRepository.find();
+    return this.ormRepository.find({
+      order: {
+        created_at: 'ASC',
+      },
+    });
   }
 
   public async findById(id: string): Promise<Log | undefined> {
@@ -28,6 +32,10 @@ class LogsRepository implements ILogsRepository {
     await this.ormRepository.save(log);
 
     return log;
+  }
+
+  public async save(log: Log): Promise<Log> {
+    return this.ormRepository.save(log);
   }
 }
 

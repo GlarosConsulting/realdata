@@ -1,5 +1,7 @@
 import { container } from 'tsyringe';
 
+import contaAzulConfig from '@config/conta_azul';
+
 import ICreateContractDTO from '@modules/conta_azul/contracts/create/dtos/ICreateContractDTO';
 import IContaAzulContractsCreatePage from '@modules/conta_azul/contracts/create/pages/IContaAzulContractsCreatePage';
 import FillCreateContractDataService from '@modules/conta_azul/contracts/create/services/FillCreateContractDataService';
@@ -19,7 +21,10 @@ class ContaAzulContractsCreatePage implements IContaAzulContractsCreatePage {
       FillCreateContractDataService,
     );
 
-    await fillCreateContractData.execute(data);
+    await fillCreateContractData.execute(
+      data,
+      contaAzulConfig.testing.dont_save,
+    );
   }
 }
 

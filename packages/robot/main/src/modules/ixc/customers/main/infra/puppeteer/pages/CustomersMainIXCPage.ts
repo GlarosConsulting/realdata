@@ -27,7 +27,7 @@ class CustomersMainIXCPage implements ICustomersMainIXCPage {
   public async findByField({
     field,
     value,
-  }: IFindCustomerByFieldDTO): Promise<ICustomerIXC> {
+  }: IFindCustomerByFieldDTO): Promise<ICustomerIXC | null> {
     const findCustomerByField = container.resolve(FindCustomerByFieldService);
 
     const customer = await findCustomerByField.execute({ field, value });

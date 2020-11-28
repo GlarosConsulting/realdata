@@ -1,5 +1,7 @@
 import { container } from 'tsyringe';
 
+import contaAzulConfig from '@config/conta_azul';
+
 import ICreateCustomerDTO from '@modules/conta_azul/customers/create/dtos/ICreateCustomerDTO';
 import IContaAzulCustomersCreatePage from '@modules/conta_azul/customers/create/pages/IContaAzulCustomersCreatePage';
 import FillCreateCustomerDataService from '@modules/conta_azul/customers/create/services/FillCreateCustomerDataService';
@@ -19,7 +21,10 @@ class ContaAzulCustomersCreatePage implements IContaAzulCustomersCreatePage {
       FillCreateCustomerDataService,
     );
 
-    await fillCreateCustomerData.execute(data);
+    await fillCreateCustomerData.execute(
+      data,
+      contaAzulConfig.testing.dont_save,
+    );
   }
 }
 

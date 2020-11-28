@@ -22,6 +22,7 @@ interface IContaAzulConfig {
   };
 
   testing: {
+    dont_save: boolean;
     account: {
       email: string;
       password: string;
@@ -52,6 +53,7 @@ export default {
   },
 
   testing: {
+    dont_save: process.env.CONTA_AZUL_DONT_SAVE === 'true',
     account: {
       email: process.env.CONTA_AZUL_TESTING_ACCOUNT_EMAIL,
       password: process.env.CONTA_AZUL_TESTING_ACCOUNT_PASSWORD,

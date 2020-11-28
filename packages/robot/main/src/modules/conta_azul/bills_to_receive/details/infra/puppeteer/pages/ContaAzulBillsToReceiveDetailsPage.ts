@@ -1,5 +1,7 @@
 import { container } from 'tsyringe';
 
+import contaAzulConfig from '@config/conta_azul';
+
 import IFillBillToReceiveDetailsDataDTO from '@modules/conta_azul/bills_to_receive/details/dtos/IFillBillToReceiveDetailsDataDTO';
 import IOpenBillToReceiveDetailsDTO from '@modules/conta_azul/bills_to_receive/details/dtos/IOpenBillToReceiveDetailsDTO';
 import IContaAzulBillsToReceiveDetailsPage from '@modules/conta_azul/bills_to_receive/details/pages/IContaAzulBillsToReceiveDetailsPage';
@@ -31,15 +33,18 @@ class ContaAzulBillsToReceiveDetailsPage
       FillBillToReceiveDetailsDataService,
     );
 
-    await fillBillToReceiveDetailsData.execute({
-      account,
-      received_date,
-      discount,
-      interest,
-      paid,
-      transaction_id,
-      sell_id,
-    });
+    await fillBillToReceiveDetailsData.execute(
+      {
+        account,
+        received_date,
+        discount,
+        interest,
+        paid,
+        transaction_id,
+        sell_id,
+      },
+      contaAzulConfig.testing.dont_save,
+    );
   }
 }
 

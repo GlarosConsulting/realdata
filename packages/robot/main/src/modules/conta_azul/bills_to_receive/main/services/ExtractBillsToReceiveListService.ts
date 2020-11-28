@@ -5,6 +5,7 @@ import injectFunctions from '@robot/shared/modules/browser/infra/puppeteer/injec
 import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 
 import parseDate from '@utils/parseDate';
+import sleep from '@utils/sleep';
 
 import IBillToReceive from '@modules/conta_azul/bills_to_receive/main/models/IBillToReceive';
 
@@ -27,6 +28,8 @@ export default class ExtractBillsToReceiveListService {
     if (!findCustomersTitleElement) {
       throw new AppError('You should be in bills to pay page.');
     }
+
+    await sleep(1000);
 
     const [findTableBodyElement] = await this.page.findElementsBySelector(
       'div#statement-list-container > table > tbody',
@@ -87,6 +90,8 @@ export default class ExtractBillsToReceiveListService {
 
       return data;
     });
+
+    await sleep(500);
 
     const billsToPay = extractedBillsToPay.map<IBillToReceive>(billToPay => ({
       ...billToPay,

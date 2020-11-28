@@ -2,9 +2,11 @@ import { celebrate, Segments, Joi } from 'celebrate';
 import { Router } from 'express';
 
 import LogsController from '../controllers/LogsController';
+import UpdateLogDischargePerformedController from '../controllers/UpdateLogDischargePerformedController';
 
 const logsRouter = Router();
 const logsController = new LogsController();
+const updateLogDischargePerformedController = new UpdateLogDischargePerformedController();
 
 logsRouter.get('/', logsController.index);
 
@@ -20,6 +22,19 @@ logsRouter.post(
     },
   }),
   logsController.create,
+);
+
+logsRouter.patch(
+  '/:log_id/discharge-performed',
+  celebrate({
+    [Segments.PARAMS]: {
+      log_id: Joi.string().uuid().required(),
+    },
+    [Segments.BODY]: {
+      discharge_performed: Joi.boolean().required(),
+    },
+  }),
+  updateLogDischargePerformedController.update,
 );
 
 export default logsRouter;

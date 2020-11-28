@@ -46,6 +46,10 @@ export default class FillBillToReceiveDetailsDataService {
       );
     }
 
+    await this.page.driver.waitForSelector('#idClienteFornecedor');
+
+    await sleep(1000);
+
     /* istanbul ignore next */
     await this.page.evaluate(() => {
       document.querySelector<HTMLInputElement>('#newIdConta').value = '';
@@ -84,19 +88,25 @@ export default class FillBillToReceiveDetailsDataService {
       '#discount',
     );
 
-    await this.page.typeToElement(findDiscountInputElement, String(discount));
+    await this.page.typeToElement(
+      findDiscountInputElement,
+      String(discount).replace('.', ','),
+    );
 
     const [findInterestInputElement] = await this.page.findElementsBySelector(
       '#interest',
     );
 
-    await this.page.typeToElement(findInterestInputElement, String(interest));
+    await this.page.typeToElement(
+      findInterestInputElement,
+      String(interest).replace('.', ','),
+    );
 
     /* istanbul ignore next */
     await this.page.evaluate(value => {
       document.querySelector<HTMLInputElement>('#amountPaid').value = String(
         value,
-      );
+      ).replace('.', ',');
     }, paid);
 
     const [
@@ -123,5 +133,7 @@ export default class FillBillToReceiveDetailsDataService {
 
       await findCloseButtonElement.click();
     }
+
+    await sleep(2000);
   }
 }

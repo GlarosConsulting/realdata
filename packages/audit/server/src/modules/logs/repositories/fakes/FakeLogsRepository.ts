@@ -27,6 +27,14 @@ class FakeLogsRepository implements ILogsRepository {
 
     return log;
   }
+
+  public async save(log: Log): Promise<Log> {
+    const findIndex = this.logs.findIndex(findLog => findLog.id === log.id);
+
+    this.logs[findIndex] = log;
+
+    return log;
+  }
 }
 
 export default FakeLogsRepository;

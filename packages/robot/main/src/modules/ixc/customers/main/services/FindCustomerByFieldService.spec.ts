@@ -24,7 +24,7 @@ describe('FindCustomerByField', () => {
   beforeAll(async () => {
     puppeteerBrowserProvider = new PuppeteerBrowserProvider();
 
-    browser = await puppeteerBrowserProvider.launch();
+    browser = await puppeteerBrowserProvider.launch({ headless: false });
   });
 
   beforeEach(async () => {
@@ -37,7 +37,7 @@ describe('FindCustomerByField', () => {
   });
 
   afterAll(async () => {
-    await browser.close();
+    // await browser.close();
   });
 
   it('should be able to find customer by field', async () => {
@@ -56,7 +56,7 @@ describe('FindCustomerByField', () => {
 
     const customer = await findCustomerByField.execute({
       field: 'id',
-      value: testingCustomerData.ixc.id,
+      value: '100000',
     });
 
     expect(customer.name).toEqual(testingCustomerData.name);

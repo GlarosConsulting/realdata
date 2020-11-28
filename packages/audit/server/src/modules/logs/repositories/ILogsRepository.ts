@@ -5,4 +5,5 @@ export default interface ILogsRepository {
   findAll(): Promise<Log[]>;
   findById(id: string): Promise<Log | undefined>;
   create(data: ICreateLogDTO): Promise<Log>;
+  save(log: Log): Promise<Log>;
 }

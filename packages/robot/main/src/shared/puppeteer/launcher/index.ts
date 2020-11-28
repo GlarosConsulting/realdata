@@ -67,13 +67,32 @@ export default class Launcher {
     };
 
     // const ixcIds = testingCustomersConfig.map(customer => customer.ixc.id);
+    // const ixcIds = ['12636']; // KARLA ANGELINA
     // const ixcIds = ['14211']; // GLAROS
     // const ixcIds = ['10902']; // LUCAS SILVA NERES
-    const ixcIds = ['12636']; // KARLA ANGELINA
+    // const ixcIds = ['10863']; // RAPHAEL
+    // const ixcIds = ['10981']; // Star Brasil Distribuidora de Produtos LTDA
+    // const ixcIds = ['11002']; // Perfilbrás Indústria e Comércio LTDA
+    // const ixcIds = ['10877']; // Ghia Car Auto Portas Ltda
+    // const ixcIds = ['10979']; // William de Moro
+    // const ixcIds = ['10930']; // Luis Otavio Soares de Andrade
 
-    console.log('IDs:', ixcIds);
+    const ixcIds = [];
+    const usedIxcIds = [];
+
+    for (let i = 10626; i < 14233; i++) {
+      ixcIds.push(String(i));
+    }
+
+    console.log('IDs:', JSON.stringify(ixcIds));
 
     for (const ixcId of ixcIds) {
+      usedIxcIds.push(ixcId);
+
+      console.log();
+      console.log('USED IDS: ', JSON.stringify(usedIxcIds));
+      console.log();
+
       switchPage(page1);
 
       const customersMainIxcPage = new CustomersMainIXCPage();
@@ -89,6 +108,10 @@ export default class Launcher {
         field: 'id',
         value: ixcId,
       });
+
+      if (!ixcCustomer || !ixcCustomer.active) {
+        continue;
+      }
 
       await customersDetailsMainIxcPage.open({
         customer_id: ixcCustomer.id,
@@ -128,6 +151,7 @@ export default class Launcher {
         },
       };
 
+      console.log();
       console.log('IXC ID:', ixcId);
       console.log(JSON.stringify(extendedCustomerIxc));
       console.log();
@@ -138,7 +162,7 @@ export default class Launcher {
 
       await contaAzulCustomersMainPage.navigateTo();
 
-      const contaAzulCustomer = await contaAzulCustomersMainPage.findByField({
+      let contaAzulCustomer = await contaAzulCustomersMainPage.findByField({
         field: 'document',
         value: extendedCustomerIxc.document,
       });
@@ -168,40 +192,60 @@ export default class Launcher {
             complement: extendedCustomerIxc.details.address.complement,
           },
         });
-      }
 
-      const contaAzulContractsCreatePage = new ContaAzulContractsCreatePage();
-
-      for (const contract of extendedCustomerIxc.details.contracts.filter(
-        item => item.status,
-      )) {
-        await contaAzulContractsCreatePage.navigateTo();
-
-        let always_charge_on_day: number;
-
-        if (isBefore(contract.activation_date, new Date(2020, 10, 13))) {
-          if (contract.activation_date.getDate() <= 5) {
-            always_charge_on_day = 5;
-          } else if (contract.activation_date.getDate() >= 6) {
-            always_charge_on_day = contract.activation_date.getDate();
-          }
-        } else if (contract.activation_date.getDate() <= 26) {
-          always_charge_on_day = contract.activation_date.getDate();
-        } else if (contract.activation_date.getDate() >= 27) {
-          always_charge_on_day = 26;
+        if (extendedCustomerIxc.details.main.person_type === 'fisica') {
+          contaAzulCustomer = {
+            name: extendedCustomerIxc.name,
+            document: extendedCustomerIxc.document,
+            email: extendedCustomerIxc.details.contact.email,
+            phone: extendedCustomerIxc.details.contact.phone_mobile,
+            active: true,
+          };
+        } else if (
+          extendedCustomerIxc.details.main.person_type === 'juridica'
+        ) {
+          contaAzulCustomer = {
+            name: extendedCustomerIxc.fantasy_name,
+            document: extendedCustomerIxc.document,
+            email: extendedCustomerIxc.details.contact.email,
+            phone: extendedCustomerIxc.details.contact.phone_mobile,
+            active: true,
+          };
         }
 
-        await contaAzulContractsCreatePage.create({
-          document: extendedCustomerIxc.document,
-          category: 'Vendas',
-          sell_date: setDate(contract.activation_date, {
-            date: always_charge_on_day + 1,
-          }).toISOString(),
-          always_charge_on_day,
-          products: formatIxcContractProductsToContaAzul(
-            contract.products.items,
-          ),
-        });
+        const contaAzulContractsCreatePage = new ContaAzulContractsCreatePage();
+
+        for (const contract of extendedCustomerIxc.details.contracts.filter(
+          item => item.status,
+        )) {
+          await contaAzulContractsCreatePage.navigateTo();
+
+          let always_charge_on_day: number;
+
+          if (isBefore(contract.activation_date, new Date(2020, 10, 13))) {
+            if (contract.activation_date.getDate() <= 5) {
+              always_charge_on_day = 5;
+            } else if (contract.activation_date.getDate() >= 6) {
+              always_charge_on_day = contract.activation_date.getDate();
+            }
+          } else if (contract.activation_date.getDate() <= 26) {
+            always_charge_on_day = contract.activation_date.getDate();
+          } else if (contract.activation_date.getDate() >= 27) {
+            always_charge_on_day = 26;
+          }
+
+          await contaAzulContractsCreatePage.create({
+            document: extendedCustomerIxc.document,
+            category: 'Vendas',
+            sell_date: setDate(contract.activation_date, {
+              date: always_charge_on_day + 1,
+            }).toISOString(),
+            always_charge_on_day,
+            products: formatIxcContractProductsToContaAzul(
+              contract.products.items,
+            ),
+          });
+        }
       }
 
       const contaAzulBillToReceiveMainPage = new ContaAzulBillToReceiveMainPage();
@@ -210,7 +254,7 @@ export default class Launcher {
 
       const billsToReceive = await contaAzulBillToReceiveMainPage.findByField({
         field: 'launch.customer_name',
-        value: extendedCustomerIxc.name,
+        value: contaAzulCustomer.name,
       });
 
       const contaAzulBillsToReceiveDetailsPage = new ContaAzulBillsToReceiveDetailsPage();
@@ -222,10 +266,6 @@ export default class Launcher {
             const dateMoreThreeDays = addDays(billToReceive.date, 3);
 
             if (
-              (billToReceive.launch.customer_name ===
-                extendedCustomerIxc.name ||
-                billToReceive.launch.customer_name ===
-                  extendedCustomerIxc.fantasy_name) &&
               billToReceive.value === receivedBill.value &&
               isAfter(receivedBill.due_date, dateLessThreeDays) &&
               isBefore(receivedBill.due_date, dateMoreThreeDays)
@@ -237,11 +277,10 @@ export default class Launcher {
           },
         );
 
-        console.log();
-
         if (filterReceivedBills.length === 0) {
+          console.log();
           console.log('Not found any received bills...');
-          console.log('Bill To Receive: ', billToReceive);
+          console.log('Bill To Receive: ', JSON.stringify(billToReceive));
           console.log();
 
           await api.post('/logs', {
@@ -256,6 +295,7 @@ export default class Launcher {
         }
 
         if (filterReceivedBills.length > 1) {
+          console.log();
           console.log('Found multiple received bills...');
           console.log();
 
@@ -263,6 +303,10 @@ export default class Launcher {
         }
 
         const finance = filterReceivedBills[0];
+
+        if (finance.status !== 'Recebido') {
+          continue;
+        }
 
         // console.log('Bill To Receive: ', billToReceive);
         // console.log('IXC Filter Bills To Receive: ', filterReceivedBills);
@@ -276,7 +320,7 @@ export default class Launcher {
           account: 'Sicoob Crediuna',
           received_date: finance.received_date.toISOString(),
           discount: 0,
-          interest: finance.paid_value - finance.value,
+          interest: Number((finance.paid_value - finance.value).toFixed(2)),
           paid: finance.paid_value,
           transaction_id: finance.id,
           sell_id: finance.sell_id,
