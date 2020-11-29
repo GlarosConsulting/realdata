@@ -1,6 +1,7 @@
 import IContractProductItemContaAzul from '@modules/conta_azul/contracts/create/models/IContractProductItemContaAzul';
 
 export default interface ICreateContractDTO {
+  name: string;
   document: string;
   category: string;
   sell_date: string;

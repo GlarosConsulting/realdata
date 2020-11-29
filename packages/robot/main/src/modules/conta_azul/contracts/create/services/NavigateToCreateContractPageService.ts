@@ -20,6 +20,8 @@ export default class NavigateToCreateContractPageService {
       '#negotiation > form > div > ng-transclude > div > div:nth-child(4) > div.col-xs-offset-1.col-xs-3.ng-scope > ca-field > div > ng-transclude > caf-customer-search-select > div > ca-search-select > div > ca-select > div > button',
     );
 
+    await this.page.driver.reload({ waitUntil: 'networkidle2' });
+
     await sleep(2000);
   }
 }

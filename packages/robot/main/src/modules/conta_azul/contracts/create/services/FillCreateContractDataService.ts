@@ -10,6 +10,7 @@ import sleep from '@utils/sleep';
 import IContractProductItemContaAzul from '@modules/conta_azul/contracts/create/models/IContractProductItemContaAzul';
 
 interface IRequest {
+  name: string;
   document: string;
   category: string;
   sell_date: string;
@@ -26,6 +27,7 @@ export default class FillCreateContractDataService {
 
   public async execute(
     {
+      name,
       document: document_value,
       category,
       sell_date,
@@ -54,10 +56,7 @@ export default class FillCreateContractDataService {
       '#negotiation > form > div > ng-transclude > div > div:nth-child(4) > div.col-xs-offset-1.col-xs-3.ng-scope > ca-field > div > ng-transclude > caf-customer-search-select > div > ca-search-select > div > ca-select > div > div > div > ca-search-select-input > span > ca-input > div > span > input',
     );
 
-    await this.page.typeToElement(
-      findCustomerInputElement,
-      removeCharacters(document_value),
-    );
+    await this.page.typeToElement(findCustomerInputElement, name);
 
     await sleep(2000);
 

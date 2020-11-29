@@ -72,7 +72,7 @@ export default class FindCustomerByFieldService {
       await this.page.driver.waitForSelector(
         'div.modal2 div.bDiv table tbody tr',
         {
-          timeout: 3000,
+          timeout: 2000,
         },
       );
     } catch {

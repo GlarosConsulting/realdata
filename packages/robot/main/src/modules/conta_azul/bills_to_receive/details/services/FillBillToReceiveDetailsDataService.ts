@@ -65,7 +65,7 @@ export default class FillBillToReceiveDetailsDataService {
 
     await findAccountInputElement.press('Enter');
 
-    await sleep(500);
+    await sleep(1000);
 
     const [
       findReceivedCheckboxElement,
@@ -75,18 +75,15 @@ export default class FillBillToReceiveDetailsDataService {
 
     await findReceivedCheckboxElement.click();
 
-    await sleep(500);
+    await sleep(1000);
 
-    const [
-      findReceivedDateDatePickerElement,
-    ] = await this.page.findElementsBySelector('#dtBaixa');
-
-    await this.page.typeToElement(
-      findReceivedDateDatePickerElement,
-      format(parseISO(received_date), 'dd/MM/yyyy'),
-    );
-
-    await sleep(500);
+    /* istanbul ignore next */
+    await this.page.evaluate(formattedDate => {
+      document.querySelector<HTMLInputElement>(
+        '#dtBaixa',
+      ).value = formattedDate;
+    }, format(parseISO(received_date), 'dd/MM/yyyy'));
+    await sleep(1000);
 
     const [findDiscountInputElement] = await this.page.findElementsBySelector(
       '#discount',
@@ -142,6 +139,46 @@ export default class FillBillToReceiveDetailsDataService {
       );
 
       await findCloseButtonElement.click();
+
+      await sleep(500);
+
+      const [
+        findInvalidDateWarningOkButtonElement,
+      ] = await this.page.findElementsBySelector(
+        '#alertDialog > div.btn-toolbar.no-margin-top.margin-bottom.Footer > ul > li > button',
+      );
+
+      if (findInvalidDateWarningOkButtonElement) {
+        console.log();
+        console.log('INVALID DATE WARNING');
+        console.log();
+
+        await findInvalidDateWarningOkButtonElement.click();
+
+        const [
+          findReceivedDateDatePickerElement2,
+        ] = await this.page.findElementsBySelector('#dtBaixa');
+
+        await this.page.typeToElement(
+          findReceivedDateDatePickerElement2,
+          format(parseISO(received_date), 'dd/MM/yyyy'),
+        );
+
+        await sleep(500);
+
+        await this.page.typeToElement(
+          findReceivedDateDatePickerElement2,
+          String.fromCharCode(13),
+        );
+
+        const [
+          findCloseButtonElement2,
+        ] = await this.page.findElementsBySelector(
+          '#newPopupManagerReplacement > div.modal-header > button',
+        );
+
+        await findCloseButtonElement2.click();
+      }
     }
 
     await sleep(2000);

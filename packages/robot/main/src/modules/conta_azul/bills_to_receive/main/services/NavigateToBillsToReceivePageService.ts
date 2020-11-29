@@ -35,7 +35,7 @@ export default class NavigateToBillsToReceivePageService {
 
     await this.page.driver.waitForSelector('table > tbody > tr > td');
 
-    await sleep(2000);
+    await sleep(3000);
 
     const [findFiltersButtonElement] = await this.page.findElementsBySelector(
       '#type-filter-controller',
@@ -43,7 +43,7 @@ export default class NavigateToBillsToReceivePageService {
 
     await findFiltersButtonElement.click();
 
-    await sleep(500);
+    await sleep(1000);
 
     await this.page.driver.waitForSelector(
       '#type-filter > ul > li.tgt-all-children > a',

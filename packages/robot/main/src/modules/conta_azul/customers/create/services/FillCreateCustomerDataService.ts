@@ -77,7 +77,7 @@ export default class FillCreateCustomerDataService {
       'body > div.ds-rollover.ds-rollover--is-opened > div.ds-rollover__body.has-footer > div > div > form > div > div > div:nth-child(1) > div > fieldset > div > div:nth-child(1) > div.ds-col.ds-col-5 > div > div.ds-input__container > input',
     );
 
-    if (person_type === 'fisica') {
+    if (person_type === 'fisica' || !fantasy_name) {
       await this.page.typeToElement(findNameInputElement, name);
     } else if (person_type === 'juridica') {
       await this.page.typeToElement(findNameInputElement, fantasy_name);
@@ -235,5 +235,7 @@ export default class FillCreateCustomerDataService {
     await this.page.driver.waitForSelector(
       '#gateway > section > div > div.ds-page > div > div > div > div.ds-row.ds-data-grid__table-container > div > div > table > tbody > tr > td:nth-child(2)',
     );
+
+    await sleep(1000);
   }
 }
