@@ -1,9 +1,9 @@
 import { useRouter } from 'next/router';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FiUsers } from 'react-icons/fi';
 import { Column } from 'react-table';
 
-import { Box, Button, Text, Tooltip, useTheme } from '@chakra-ui/core';
+import { Box, Button, Input, Text, Tooltip, useTheme } from '@chakra-ui/core';
 import { format, parseISO } from 'date-fns';
 
 import SEO from '@/components/SEO';
@@ -49,30 +49,68 @@ const Logs: React.FC = () => {
 
   const { logs, performDischarge } = useLogs();
 
-  const handleGoToCustomersIXC = useCallback(() => {
-    router.replace('/app/ixc');
-  }, []);
+  const [filteredLogs, setFilteredLogs] = useState(logs);
 
-  const handlePerformDischarge = useCallback(async (log: ILog) => {
-    await performDischarge(log);
-  }, []);
+  const [search, setSearch] = useState('');
 
-  const formattedLogs = useMemo(
-    () =>
-      logs?.map<ILogFormattedWithComponents>(log => ({
+  const formatLogs = useCallback(
+    (list: ILog[]) =>
+      list?.map<ILogFormattedWithComponents>(log => ({
         ...log,
         date_formatted: format(parseISO(log.date), 'dd/MM/yyyy'),
         conta_azul_existing_formatted: log.conta_azul_existing ? 'Sim' : 'Não',
         discharge_performed_formatted: (
           <>
             <Text width={10}>{log.discharge_performed ? 'Sim' : 'Não'}</Text>
-            <Button onClick={() => handlePerformDischarge(log)}>
-              Alternar
-            </Button>
+            <Button onClick={() => performDischarge(log)}>Alternar</Button>
           </>
         ),
-      })) || [],
-    [logs],
+      })),
+    [],
+  );
+
+  const formattedLogs = useMemo(() => formatLogs(filteredLogs) || [], [
+    filteredLogs,
+  ]);
+
+  useEffect(() => {
+    setFilteredLogs(logs);
+  }, [logs]);
+
+  useEffect(() => {
+    if (!search) {
+      setFilteredLogs(logs);
+      return;
+    }
+
+    console.log(search);
+
+    const localFormattedLogs = formatLogs(logs);
+
+    const searchedLogs = localFormattedLogs.filter(log => {
+      const values = Object.values(log);
+
+      console.log(log);
+
+      const found = values.some(
+        val => String(val).toLowerCase().indexOf(search.toLowerCase()) > -1,
+      );
+
+      return found;
+    });
+
+    setFilteredLogs(searchedLogs);
+  }, [search]);
+
+  const handleGoToCustomersIXC = useCallback(() => {
+    router.replace('/app/ixc');
+  }, []);
+
+  const handleChangeSearch = useCallback(
+    (event: React.FormEvent<HTMLInputElement>) => {
+      setSearch(event.currentTarget.value);
+    },
+    [],
   );
 
   return (
@@ -106,7 +144,19 @@ const Logs: React.FC = () => {
 
       <Box as="main" marginLeft={24} marginY={6} paddingRight={8}>
         <Box>
-          <Title>Histórico</Title>
+          <Title>
+            Histórico
+            <Input
+              placeholder="Pesquisar"
+              width={56}
+              marginTop="-10px"
+              borderColor="gray.300"
+              _focusWithin={{
+                borderColor: 'blue.50',
+              }}
+              onChange={handleChangeSearch}
+            />
+          </Title>
 
           <Table columns={COLUMNS} data={formattedLogs} />
         </Box>
