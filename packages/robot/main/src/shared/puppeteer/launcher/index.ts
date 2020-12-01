@@ -270,13 +270,17 @@ export default class Launcher {
             console.log('Bill To Receive: ', JSON.stringify(billToReceive));
             console.log();
 
-            await api.post('/logs', {
-              date: new Date(),
-              ixc_id: `${extendedCustomerIxc.id} - ${extendedCustomerIxc.name}`,
-              projection_id: billToReceive.sell_id,
-              conta_azul_existing: true,
-              discharge_performed: false,
-            });
+            try {
+              await api.post('/logs', {
+                date: new Date(),
+                ixc_id: `${extendedCustomerIxc.id} - ${extendedCustomerIxc.name}`,
+                projection_id: billToReceive.sell_id,
+                conta_azul_existing: true,
+                discharge_performed: false,
+              });
+            } catch {
+              // ignore catch block
+            }
 
             continue;
           }
@@ -406,13 +410,17 @@ export default class Launcher {
           console.log('Skipping to:', nextIxcId);
           console.log();
 
-          await api.post('/logs', {
-            date: new Date(),
-            ixc_id: `${err.ixc.id} - ${err.ixc.name}`,
-            projection_id: 'Erro no Conta Azul',
-            conta_azul_existing: false,
-            discharge_performed: false,
-          });
+          try {
+            await api.post('/logs', {
+              date: new Date(),
+              ixc_id: `${err.ixc.id} - ${err.ixc.name}`,
+              projection_id: 'Erro no Conta Azul',
+              conta_azul_existing: false,
+              discharge_performed: false,
+            });
+          } catch {
+            // ignore catch block
+          }
 
           await run(nextIxcId);
 
@@ -425,7 +433,7 @@ export default class Launcher {
       }
     };
 
-    await run(13260);
+    await run(13263);
 
     timer.stop();
 

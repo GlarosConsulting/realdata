@@ -1,5 +1,7 @@
 import { injectable, inject } from 'tsyringe';
 
+import AppError from '@shared/errors/AppError';
+
 import Log from '../infra/typeorm/entities/Log';
 import ILogsRepository from '../repositories/ILogsRepository';
 
@@ -25,6 +27,17 @@ export default class CreateLogService {
     conta_azul_existing,
     discharge_performed,
   }: IRequest): Promise<Log> {
+    const checkExists = await this.logsRepository.checkExistsByIxcIdAndProjectionId(
+      {
+        ixc_id,
+        projection_id,
+      },
+    );
+
+    if (checkExists) {
+      throw new AppError('Duplicated log.');
+    }
+
     const log = await this.logsRepository.create({
       date,
       ixc_id,

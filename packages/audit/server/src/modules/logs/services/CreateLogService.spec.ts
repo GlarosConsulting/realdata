@@ -1,3 +1,5 @@
+import AppError from '@shared/errors/AppError';
+
 import FakeLogsRepository from '../repositories/fakes/FakeLogsRepository';
 import CreateLogService from './CreateLogService';
 
@@ -29,5 +31,25 @@ describe('CreateLog', () => {
         discharge_performed: expect.any(Boolean),
       }),
     );
+  });
+
+  it('should not be able to create duplicated log', async () => {
+    await createLog.execute({
+      date: new Date(),
+      ixc_id: '123',
+      projection_id: '321',
+      conta_azul_existing: true,
+      discharge_performed: true,
+    });
+
+    await expect(
+      createLog.execute({
+        date: new Date(),
+        ixc_id: '123',
+        projection_id: '321',
+        conta_azul_existing: true,
+        discharge_performed: true,
+      }),
+    ).rejects.toBeInstanceOf(AppError);
   });
 });
