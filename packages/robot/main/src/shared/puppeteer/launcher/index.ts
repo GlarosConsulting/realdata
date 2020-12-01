@@ -307,18 +307,40 @@ export default class Launcher {
             bill_to_receive_sell_id: billToReceive.sell_id,
           });
 
-          // console.log(finance.paid_value);
-          // console.log(Number((finance.paid_value - finance.value).toFixed(2)));
+          if (finance.paid_value !== 0.01) {
+            await contaAzulBillsToReceiveDetailsPage.fillData({
+              account: 'Sicoob Crediuna',
+              received_date: finance.received_date.toISOString(),
+              discount: 0,
+              interest: Number((finance.paid_value - finance.value).toFixed(2)),
+              paid: finance.paid_value,
+              transaction_id: finance.id,
+              sell_id: finance.sell_id,
+            });
+          } else {
+            await contaAzulBillsToReceiveDetailsPage.fillData({
+              account: 'Sicoob Crediuna',
+              received_date: finance.received_date.toISOString(),
+              discount:
+                Number((finance.paid_value - finance.value).toFixed(2)) * -1,
+              interest: 0,
+              paid: finance.paid_value,
+              transaction_id: finance.id,
+              sell_id: finance.sell_id,
+            });
 
-          await contaAzulBillsToReceiveDetailsPage.fillData({
-            account: 'Sicoob Crediuna',
-            received_date: finance.received_date.toISOString(),
-            discount: 0,
-            interest: Number((finance.paid_value - finance.value).toFixed(2)),
-            paid: finance.paid_value,
-            transaction_id: finance.id,
-            sell_id: finance.sell_id,
-          });
+            try {
+              await api.post('/logs', {
+                date: new Date(),
+                ixc_id: `${extendedCustomerIxc.id} - ${extendedCustomerIxc.name}`,
+                projection_id: billToReceive.sell_id,
+                conta_azul_existing: true,
+                discharge_performed: true,
+              });
+            } catch {
+              // ignore catch block
+            }
+          }
         }
 
         // await page2.driver.reload();
