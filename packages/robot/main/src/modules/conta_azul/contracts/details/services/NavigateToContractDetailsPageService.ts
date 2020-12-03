@@ -13,7 +13,7 @@ interface IRequest {
 }
 
 @injectable()
-export default class NavigateToContractDetailsService {
+export default class NavigateToContractDetailsPageService {
   constructor(
     @inject('Page')
     private page: Page,

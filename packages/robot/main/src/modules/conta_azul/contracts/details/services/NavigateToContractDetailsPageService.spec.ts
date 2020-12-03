@@ -10,7 +10,6 @@ import NavigateToContractsPageService from '@modules/conta_azul/contracts/main/s
 import AuthenticateUserService from '@modules/conta_azul/login/services/AuthenticateUserService';
 import NavigateToLogInPageService from '@modules/conta_azul/login/services/NavigateToLogInPageService';
 
-import ExtractContractDetailsService from './ExtractContractDetailsService';
 import NavigateToContractDetailsPageService from './NavigateToContractDetailsPageService';
 
 let puppeteerBrowserProvider: PuppeteerBrowserProvider;
@@ -19,12 +18,11 @@ let authenticateUser: AuthenticateUserService;
 let navigateToContractsPage: NavigateToContractsPageService;
 let findContractsByCustomerName: FindContractsByCustomerNameService;
 let navigateToContractDetailsPage: NavigateToContractDetailsPageService;
-let extractContractDetails: ExtractContractDetailsService;
 
 let browser: Browser;
 let page: Page;
 
-describe('ExtractContractDetails', () => {
+describe('NavigateToContractDetails', () => {
   beforeAll(async () => {
     puppeteerBrowserProvider = new PuppeteerBrowserProvider();
 
@@ -41,14 +39,13 @@ describe('ExtractContractDetails', () => {
     navigateToContractDetailsPage = new NavigateToContractDetailsPageService(
       page,
     );
-    extractContractDetails = new ExtractContractDetailsService(page);
   });
 
   afterAll(async () => {
     // await browser.close();
   });
 
-  it('should be able to extract contract details', async () => {
+  it('should be able to open contract details', async () => {
     await navigateToLogInPage.execute();
 
     const { email, password } = contaAzulConfig.testing.account;
@@ -67,25 +64,5 @@ describe('ExtractContractDetails', () => {
     });
 
     await navigateToContractDetailsPage.execute({ contract });
-
-    const contractDetails = await extractContractDetails.execute();
-
-    expect(contractDetails).toEqual(
-      expect.objectContaining({
-        start_date: expect.any(Date),
-        next_billing_date: expect.any(Date),
-        frequency: expect.any(String),
-        charging: expect.any(String),
-        remaining_validity: expect.any(String),
-        products: expect.arrayContaining([
-          expect.objectContaining({
-            name: expect.any(String),
-            description: expect.any(String),
-            amount: expect.any(Number),
-            unit_value: expect.any(Number),
-          }),
-        ]),
-      }),
-    );
   });
 });

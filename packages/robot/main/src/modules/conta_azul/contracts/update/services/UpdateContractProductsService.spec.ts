@@ -5,13 +5,16 @@ import PuppeteerBrowserProvider from '@robot/shared/modules/browser/providers/Br
 import contaAzulConfig from '@config/conta_azul';
 import testingCustomersConfig from '@config/testing_customers';
 
+import formatIxcContractProductsToContaAzul from '@utils/formatIxcContractProductsToContaAzul';
+
+import NavigateToContractDetailsPageService from '@modules/conta_azul/contracts/details/services/NavigateToContractDetailsPageService';
 import FindContractsByCustomerNameService from '@modules/conta_azul/contracts/main/services/FindContractsByCustomerNameService';
 import NavigateToContractsPageService from '@modules/conta_azul/contracts/main/services/NavigateToContractsPageService';
 import AuthenticateUserService from '@modules/conta_azul/login/services/AuthenticateUserService';
 import NavigateToLogInPageService from '@modules/conta_azul/login/services/NavigateToLogInPageService';
 
-import ExtractContractDetailsService from './ExtractContractDetailsService';
-import NavigateToContractDetailsPageService from './NavigateToContractDetailsPageService';
+import NavigateToUpdateContractPageService from './NavigateToUpdateContractPageService';
+import UpdateContractProductsService from './UpdateContractProductsService';
 
 let puppeteerBrowserProvider: PuppeteerBrowserProvider;
 let navigateToLogInPage: NavigateToLogInPageService;
@@ -19,12 +22,13 @@ let authenticateUser: AuthenticateUserService;
 let navigateToContractsPage: NavigateToContractsPageService;
 let findContractsByCustomerName: FindContractsByCustomerNameService;
 let navigateToContractDetailsPage: NavigateToContractDetailsPageService;
-let extractContractDetails: ExtractContractDetailsService;
+let navigateToUpdateContractPage: NavigateToUpdateContractPageService;
+let updateContractProducts: UpdateContractProductsService;
 
 let browser: Browser;
 let page: Page;
 
-describe('ExtractContractDetails', () => {
+describe('UpdateContractProducts', () => {
   beforeAll(async () => {
     puppeteerBrowserProvider = new PuppeteerBrowserProvider();
 
@@ -41,14 +45,17 @@ describe('ExtractContractDetails', () => {
     navigateToContractDetailsPage = new NavigateToContractDetailsPageService(
       page,
     );
-    extractContractDetails = new ExtractContractDetailsService(page);
+    navigateToUpdateContractPage = new NavigateToUpdateContractPageService(
+      page,
+    );
+    updateContractProducts = new UpdateContractProductsService(page);
   });
 
   afterAll(async () => {
     // await browser.close();
   });
 
-  it('should be able to extract contract details', async () => {
+  it('should be able to update contract products', async () => {
     await navigateToLogInPage.execute();
 
     const { email, password } = contaAzulConfig.testing.account;
@@ -60,32 +67,28 @@ describe('ExtractContractDetails', () => {
 
     await navigateToContractsPage.execute();
 
-    const testingCustomer = testingCustomersConfig[0];
+    const testingCustomer = testingCustomersConfig[2];
 
     const [contract] = await findContractsByCustomerName.execute({
-      name: testingCustomer.name,
+      name:
+        testingCustomer.ixc.details.main.person_type === 'fisica'
+          ? testingCustomer.name
+          : testingCustomer.ixc.fantasy_name,
     });
 
     await navigateToContractDetailsPage.execute({ contract });
 
-    const contractDetails = await extractContractDetails.execute();
+    await navigateToUpdateContractPage.execute();
 
-    expect(contractDetails).toEqual(
-      expect.objectContaining({
-        start_date: expect.any(Date),
-        next_billing_date: expect.any(Date),
-        frequency: expect.any(String),
-        charging: expect.any(String),
-        remaining_validity: expect.any(String),
-        products: expect.arrayContaining([
-          expect.objectContaining({
-            name: expect.any(String),
-            description: expect.any(String),
-            amount: expect.any(Number),
-            unit_value: expect.any(Number),
-          }),
-        ]),
-      }),
+    const testingContract = testingCustomer.ixc.details.contracts[0];
+
+    await updateContractProducts.execute(
+      {
+        products: formatIxcContractProductsToContaAzul(
+          testingContract.products.items,
+        ),
+      },
+      false,
     );
   });
 });

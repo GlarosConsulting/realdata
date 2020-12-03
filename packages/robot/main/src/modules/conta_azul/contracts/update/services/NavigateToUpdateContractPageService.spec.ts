@@ -5,24 +5,26 @@ import PuppeteerBrowserProvider from '@robot/shared/modules/browser/providers/Br
 import contaAzulConfig from '@config/conta_azul';
 import testingCustomersConfig from '@config/testing_customers';
 
+import NavigateToContractDetailsPageService from '@modules/conta_azul/contracts/details/services/NavigateToContractDetailsPageService';
 import FindContractsByCustomerNameService from '@modules/conta_azul/contracts/main/services/FindContractsByCustomerNameService';
 import NavigateToContractsPageService from '@modules/conta_azul/contracts/main/services/NavigateToContractsPageService';
 import AuthenticateUserService from '@modules/conta_azul/login/services/AuthenticateUserService';
 import NavigateToLogInPageService from '@modules/conta_azul/login/services/NavigateToLogInPageService';
 
-import NavigateToContractDetailsService from './NavigateToContractDetailsService';
+import NavigateToUpdateContractPageService from './NavigateToUpdateContractPageService';
 
 let puppeteerBrowserProvider: PuppeteerBrowserProvider;
 let navigateToLogInPage: NavigateToLogInPageService;
 let authenticateUser: AuthenticateUserService;
 let navigateToContractsPage: NavigateToContractsPageService;
 let findContractsByCustomerName: FindContractsByCustomerNameService;
-let navigateToContractDetails: NavigateToContractDetailsService;
+let navigateToContractDetailsPage: NavigateToContractDetailsPageService;
+let navigateToUpdateContractPage: NavigateToUpdateContractPageService;
 
 let browser: Browser;
 let page: Page;
 
-describe('NavigateToContractDetails', () => {
+describe('NavigateToUpdateContractPage', () => {
   beforeAll(async () => {
     puppeteerBrowserProvider = new PuppeteerBrowserProvider();
 
@@ -36,7 +38,12 @@ describe('NavigateToContractDetails', () => {
     authenticateUser = new AuthenticateUserService(page);
     navigateToContractsPage = new NavigateToContractsPageService(page);
     findContractsByCustomerName = new FindContractsByCustomerNameService(page);
-    navigateToContractDetails = new NavigateToContractDetailsService(page);
+    navigateToContractDetailsPage = new NavigateToContractDetailsPageService(
+      page,
+    );
+    navigateToUpdateContractPage = new NavigateToUpdateContractPageService(
+      page,
+    );
   });
 
   afterAll(async () => {
@@ -61,6 +68,8 @@ describe('NavigateToContractDetails', () => {
       name: testingCustomer.name,
     });
 
-    await navigateToContractDetails.execute({ contract });
+    await navigateToContractDetailsPage.execute({ contract });
+
+    await navigateToUpdateContractPage.execute();
   });
 });
