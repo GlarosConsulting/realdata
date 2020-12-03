@@ -231,6 +231,10 @@ export default class Launcher {
               products: contractProducts,
             });
           }
+        } else {
+          console.log();
+          console.log('TODO: update contracts');
+          console.log();
         }
 
         const contaAzulBillToReceiveMainPage = new ContaAzulBillToReceiveMainPage();

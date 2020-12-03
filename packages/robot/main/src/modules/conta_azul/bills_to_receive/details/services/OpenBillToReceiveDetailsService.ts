@@ -37,8 +37,6 @@ export default class OpenBillToReceiveDetailsService {
 
       const findElement: HTMLElement = await new Promise(resolve => {
         elements.forEach(element => {
-          console.log(element);
-
           let dataOriginalTitle = element.getAttribute('data-original-title');
 
           if (dataOriginalTitle) {
