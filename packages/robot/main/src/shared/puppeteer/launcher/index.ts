@@ -12,12 +12,15 @@ import Timer from '@utils/timer';
 import ICacheProvider from '@shared/container/providers/CacheProvider/models/ICacheProvider';
 import IConfigurationProvider from '@shared/container/providers/ConfigurationProvider/models/IConfigurationProvider';
 import ProcessingContaAzulError from '@shared/errors/ProcessingContaAzulError';
+import IExtendedContractContaAzul from '@shared/models/IExtendedContractContaAzul';
 import IExtendedCustomerIXC from '@shared/models/IExtendedCustomerIXC';
 import api from '@shared/services/api';
 
 import ContaAzulBillsToReceiveDetailsPage from '@modules/conta_azul/bills_to_receive/details/infra/puppeteer/pages/ContaAzulBillsToReceiveDetailsPage';
 import ContaAzulBillToReceiveMainPage from '@modules/conta_azul/bills_to_receive/main/infra/puppeteer/pages/ContaAzulBillToReceiveMainPage';
 import ContaAzulContractsCreatePage from '@modules/conta_azul/contracts/create/infra/puppeteer/pages/ContaAzulContractsCreatePage';
+import ContaAzulContractsDetailsPage from '@modules/conta_azul/contracts/details/infra/puppeteer/pages/ContaAzulContractsDetailsPage';
+import ContaAzulContractsMainPage from '@modules/conta_azul/contracts/main/infra/puppeteer/pages/ContaAzulContractsMainPage';
 import ContaAzulCustomersCreatePage from '@modules/conta_azul/customers/create/infra/puppeteer/pages/ContaAzulCustomersCreatePage';
 import ContaAzulCustomersMainPage from '@modules/conta_azul/customers/main/infra/puppeteer/pages/ContaAzulCustomersMainPage';
 import ContaAzulLogInHandler from '@modules/conta_azul/login/infra/handlers';
@@ -107,7 +110,7 @@ export default class Launcher {
       await customersDetailsMainIxcPage.navigateTo();
       await customersDetailsContractIxcPage.navigateTo();
 
-      const contracts = await customersDetailsContractIxcPage.getAll();
+      const ixcContracts = await customersDetailsContractIxcPage.getAll();
 
       await customersDetailsMainIxcPage.navigateTo();
 
@@ -120,7 +123,7 @@ export default class Launcher {
           address: addressInfo,
           contact: contactInfo,
           finances,
-          contracts,
+          contracts: ixcContracts,
         },
       };
 
@@ -135,6 +138,7 @@ export default class Launcher {
         switchPage(pages.conta_azul);
 
         const contaAzulCustomersMainPage = new ContaAzulCustomersMainPage();
+        const contaAzulContractsCreatePage = new ContaAzulContractsCreatePage();
 
         await contaAzulCustomersMainPage.navigateTo();
 
@@ -191,8 +195,6 @@ export default class Launcher {
             };
           }
 
-          const contaAzulContractsCreatePage = new ContaAzulContractsCreatePage();
-
           for (const contract of extendedCustomerIxc.details.contracts.filter(
             item => item.status,
           )) {
@@ -232,9 +234,36 @@ export default class Launcher {
             });
           }
         } else {
-          console.log();
-          console.log('TODO: update contracts');
-          console.log();
+          const contaAzulContractsMainPage = new ContaAzulContractsMainPage();
+
+          await contaAzulContractsMainPage.navigateTo();
+
+          const contaAzulContracts = await contaAzulContractsMainPage.findByCustomerName(
+            contaAzulCustomer.name,
+          );
+
+          const extendedContracts: IExtendedContractContaAzul[] = [];
+
+          for (const contract of contaAzulContracts) {
+            const contaAzulContractsDetailsPage = new ContaAzulContractsDetailsPage();
+
+            await contaAzulContractsDetailsPage.navigateTo(contract);
+
+            const contractDetails = await contaAzulContractsDetailsPage.getDetails();
+
+            const extendedContract: IExtendedContractContaAzul = {
+              ...contract,
+              details: contractDetails,
+            };
+
+            extendedContracts.push(extendedContract);
+
+            await contaAzulContractsMainPage.navigateTo();
+
+            await contaAzulContractsMainPage.findByCustomerName(
+              contaAzulCustomer.name,
+            );
+          }
         }
 
         const contaAzulBillToReceiveMainPage = new ContaAzulBillToReceiveMainPage();
