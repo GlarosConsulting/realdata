@@ -93,6 +93,8 @@ export default class ExtractContractDetailsService {
       } as IExtractContractDetailsContaAzul;
     });
 
+    await sleep(1000);
+
     const [findEditButtonElement] = await this.page.findElementsBySelector(
       '#conteudo > div:nth-child(1) > div:nth-child(2) > button',
     );
@@ -107,7 +109,11 @@ export default class ExtractContractDetailsService {
         document.querySelector<HTMLTextAreaElement>('#negotiationNote').value,
     );
 
+    await sleep(1000);
+
     await this.page.driver.goBack();
+
+    await sleep(500);
 
     const contractDetails: IContractDetailsContaAzul = {
       ...extractedContractDetails,
