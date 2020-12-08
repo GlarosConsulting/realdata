@@ -103,6 +103,8 @@ export default class ExtractContractDetailsService {
 
     await sleep(2000);
 
+    await this.page.driver.waitForSelector('#negotiationNote');
+
     /* istanbul ignore next */
     const description = await this.page.evaluate<string>(
       () =>
