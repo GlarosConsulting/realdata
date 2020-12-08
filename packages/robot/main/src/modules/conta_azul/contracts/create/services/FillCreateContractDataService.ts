@@ -16,6 +16,7 @@ interface IRequest {
   sell_date: string;
   always_charge_on_day: number;
   products: IContractProductItemContaAzul[];
+  ixc_contract_id: string;
 }
 
 @injectable()
@@ -33,6 +34,7 @@ export default class FillCreateContractDataService {
       sell_date,
       always_charge_on_day,
       products,
+      ixc_contract_id,
     }: IRequest,
     dontSave = true,
   ): Promise<void> {
@@ -186,18 +188,29 @@ export default class FillCreateContractDataService {
       );
     }
 
+    const [
+      findDescriptionTextareaElement,
+    ] = await this.page.findElementsBySelector('#negotiationNote');
+
+    await this.page.typeToElement(
+      findDescriptionTextareaElement,
+      `ID Contrato IXC: ${ixc_contract_id}`,
+    );
+
+    await sleep(500);
+
     if (!dontSave) {
       const [findSaveButtonElement] = await this.page.findElementsBySelector(
         '#saveNegotiation',
       );
 
       await findSaveButtonElement.click();
+
+      await sleep(2000);
+
+      await this.page.driver.waitForSelector(
+        '#conteudo > div:nth-child(1) > div:nth-child(2) > button',
+      );
     }
-
-    await sleep(2000);
-
-    await this.page.driver.waitForSelector(
-      '#conteudo > div:nth-child(1) > div:nth-child(2) > button',
-    );
   }
 }

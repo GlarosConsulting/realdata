@@ -15,6 +15,9 @@ interface IContaAzulConfig {
       create: {
         url: string;
       };
+      details: {
+        url: string;
+      };
     };
     bills_to_receive: {
       url: string;
@@ -44,6 +47,9 @@ export default {
       },
       create: {
         url: 'https://app.contaazul.com/#/contratos/novo',
+      },
+      details: {
+        url: 'https://app.contaazul.com/#/contratos/visualizar/<id>',
       },
     },
     bills_to_receive: {

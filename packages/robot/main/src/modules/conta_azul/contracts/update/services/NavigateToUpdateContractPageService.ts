@@ -3,7 +3,13 @@ import { injectable, inject } from 'tsyringe';
 import AppError from '@robot/shared/errors/AppError';
 import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 
+import contaAzulConfig from '@config/conta_azul';
+
 import sleep from '@utils/sleep';
+
+interface IRequest {
+  contract_id?: string;
+}
 
 @injectable()
 export default class NavigateToUpdateContractPageService {
@@ -12,7 +18,20 @@ export default class NavigateToUpdateContractPageService {
     private page: Page,
   ) {}
 
-  public async execute(): Promise<void> {
+  public async execute(
+    { contract_id }: IRequest = { contract_id: undefined },
+  ): Promise<void> {
+    if (contract_id) {
+      const url = contaAzulConfig.pages.contracts.details.url.replace(
+        '<id>',
+        contract_id,
+      );
+
+      await this.page.goTo(url);
+
+      await sleep(1000);
+    }
+
     const [
       findContractDetailsPageIdentifierElement,
     ] = await this.page.findElementsBySelector(

@@ -7,4 +7,5 @@ import IFindCustomerByFieldDTO from '../dtos/IFindCustomerByFieldDTO';
 export default interface IContaAzulCustomersMainPage extends IRobotPage {
   getAll(): Promise<ICustomerContaAzul[]>;
   findByField(data: IFindCustomerByFieldDTO): Promise<ICustomerContaAzul>;
+  disable(customerName: string): Promise<void>;
 }

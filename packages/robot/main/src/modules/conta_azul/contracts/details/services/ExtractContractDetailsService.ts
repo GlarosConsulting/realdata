@@ -4,6 +4,7 @@ import AppError from '@robot/shared/errors/AppError';
 import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 
 import parseDate from '@utils/parseDate';
+import sleep from '@utils/sleep';
 
 import IContractProductItemContaAzul from '@modules/conta_azul/contracts/create/models/IContractProductItemContaAzul';
 import IContractDetailsContaAzul from '@modules/conta_azul/contracts/details/models/IContractDetailsContaAzul';
@@ -31,6 +32,12 @@ export default class ExtractContractDetailsService {
     if (!findCreateContractButtonElement) {
       throw new AppError('You should be in contract details page.');
     }
+
+    const pageUrl = await this.page.driver.url();
+
+    const splittedPageUrl = pageUrl.split('/');
+
+    const id = splittedPageUrl[splittedPageUrl.length - 1];
 
     /* istanbul ignore next */
     const extractedContractDetails = await this.page.evaluate<
@@ -83,11 +90,29 @@ export default class ExtractContractDetailsService {
         charging,
         remaining_validity,
         products,
-      };
+      } as IExtractContractDetailsContaAzul;
     });
+
+    const [findEditButtonElement] = await this.page.findElementsBySelector(
+      '#conteudo > div:nth-child(1) > div:nth-child(2) > button',
+    );
+
+    await this.page.clickForNavigate(findEditButtonElement);
+
+    await sleep(2000);
+
+    /* istanbul ignore next */
+    const description = await this.page.evaluate<string>(
+      () =>
+        document.querySelector<HTMLTextAreaElement>('#negotiationNote').value,
+    );
+
+    await this.page.driver.goBack();
 
     const contractDetails: IContractDetailsContaAzul = {
       ...extractedContractDetails,
+      id,
+      description,
       start_date: parseDate(extractedContractDetails.start_date),
       next_billing_date: parseDate(extractedContractDetails.next_billing_date),
     };

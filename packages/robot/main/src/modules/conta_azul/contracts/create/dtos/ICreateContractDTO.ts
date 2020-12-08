@@ -7,4 +7,5 @@ export default interface ICreateContractDTO {
   sell_date: string;
   always_charge_on_day: number;
   products: IContractProductItemContaAzul[];
+  ixc_contract_id;
 }

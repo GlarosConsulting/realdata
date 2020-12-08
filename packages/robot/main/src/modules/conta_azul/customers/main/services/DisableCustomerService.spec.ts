@@ -1,5 +1,3 @@
-import { addDays } from 'date-fns';
-
 import Browser from '@robot/shared/modules/browser/infra/puppeteer/models/Browser';
 import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 import PuppeteerBrowserProvider from '@robot/shared/modules/browser/providers/BrowserProvider/implementations/PuppeteerBrowserProvider';
@@ -7,26 +5,24 @@ import PuppeteerBrowserProvider from '@robot/shared/modules/browser/providers/Br
 import contaAzulConfig from '@config/conta_azul';
 import testingCustomersConfig from '@config/testing_customers';
 
-import formatIxcContractProductsToContaAzul from '@utils/formatIxcContractProductsToContaAzul';
-
-import NavigateToCustomersPageService from '@modules/conta_azul/customers/main/services/NavigateToCustomersPageService';
 import AuthenticateUserService from '@modules/conta_azul/login/services/AuthenticateUserService';
 import NavigateToLogInPageService from '@modules/conta_azul/login/services/NavigateToLogInPageService';
 
-import FillCreateContractDataService from './FillCreateContractDataService';
-import NavigateToCreateContractPageService from './NavigateToCreateContractPageService';
+import DisableCustomerService from './DisableCustomerService';
+import FindCustomerByFieldService from './FindCustomerByFieldService';
+import NavigateToCustomersPageService from './NavigateToCustomersPageService';
 
 let puppeteerBrowserProvider: PuppeteerBrowserProvider;
 let navigateToLogInPage: NavigateToLogInPageService;
 let authenticateUser: AuthenticateUserService;
 let navigateToCustomersPage: NavigateToCustomersPageService;
-let navigateToCreateContractPage: NavigateToCreateContractPageService;
-let fillCreateContractData: FillCreateContractDataService;
+let findCustomerByField: FindCustomerByFieldService;
+let disableCustomer: DisableCustomerService;
 
 let browser: Browser;
 let page: Page;
 
-describe('FillCreateContractData', () => {
+describe('DisableCustomer', () => {
   beforeAll(async () => {
     puppeteerBrowserProvider = new PuppeteerBrowserProvider();
 
@@ -39,17 +35,15 @@ describe('FillCreateContractData', () => {
     navigateToLogInPage = new NavigateToLogInPageService(page);
     authenticateUser = new AuthenticateUserService(page);
     navigateToCustomersPage = new NavigateToCustomersPageService(page);
-    navigateToCreateContractPage = new NavigateToCreateContractPageService(
-      page,
-    );
-    fillCreateContractData = new FillCreateContractDataService(page);
+    findCustomerByField = new FindCustomerByFieldService(page);
+    disableCustomer = new DisableCustomerService(page);
   });
 
   afterAll(async () => {
     // await browser.close();
   });
 
-  it('should be able to fill create contract data', async () => {
+  it('should be able to find customer by field', async () => {
     await navigateToLogInPage.execute();
 
     const { email, password } = contaAzulConfig.testing.account;
@@ -61,21 +55,13 @@ describe('FillCreateContractData', () => {
 
     await navigateToCustomersPage.execute();
 
-    await navigateToCreateContractPage.execute();
+    const testingCustomer = testingCustomersConfig[0];
 
-    const testingCustomer = testingCustomersConfig[3];
-    const testingContract = testingCustomer.ixc.details.contracts[0];
-
-    await fillCreateContractData.execute({
-      name: testingContract.customer_name,
-      document: testingCustomer.document,
-      category: 'Vendas',
-      sell_date: addDays(testingContract.activation_date, 2).toISOString(),
-      always_charge_on_day: 5,
-      products: formatIxcContractProductsToContaAzul(
-        testingContract.products.items,
-      ),
-      ixc_contract_id: testingContract.id,
+    const customer = await findCustomerByField.execute({
+      field: 'document',
+      value: testingCustomer.document,
     });
+
+    await disableCustomer.execute({ customer_name: customer.name });
   });
 });

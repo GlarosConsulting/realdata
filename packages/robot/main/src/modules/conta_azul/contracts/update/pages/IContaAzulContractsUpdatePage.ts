@@ -1,7 +1,6 @@
-import IRobotPage from '@shared/puppeteer/pages/IRobotPage';
+import IUpdateContractDTO from '@modules/conta_azul/contracts/update/dtos/IUpdateContractDTO';
 
-import IContractProductItemContaAzul from '@modules/conta_azul/contracts/create/models/IContractProductItemContaAzul';
-
-export default interface IContaAzulContractsUpdatePage extends IRobotPage {
-  updateProducts(newProducts: IContractProductItemContaAzul[]): Promise<void>;
+export default interface IContaAzulContractsUpdatePage {
+  navigateTo(contract_id?: string): Promise<void>;
+  update(data: IUpdateContractDTO): Promise<void>;
 }

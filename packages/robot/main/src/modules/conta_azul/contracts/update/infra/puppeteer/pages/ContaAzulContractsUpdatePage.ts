@@ -1,27 +1,31 @@
 import { container } from 'tsyringe';
 
-import IContractProductItemContaAzul from '@modules/conta_azul/contracts/create/models/IContractProductItemContaAzul';
+import contaAzulConfig from '@config/conta_azul';
+
+import IUpdateContractDTO from '@modules/conta_azul/contracts/update/dtos/IUpdateContractDTO';
 import IContaAzulContractsUpdatePage from '@modules/conta_azul/contracts/update/pages/IContaAzulContractsUpdatePage';
 import NavigateToUpdateContractPageService from '@modules/conta_azul/contracts/update/services/NavigateToUpdateContractPageService';
-import UpdateContractProductsService from '@modules/conta_azul/contracts/update/services/UpdateContractProductsService';
+import UpdateContractService from '@modules/conta_azul/contracts/update/services/UpdateContractService';
 
 class ContaAzulContractsUpdatePage implements IContaAzulContractsUpdatePage {
-  public async navigateTo(): Promise<void> {
+  public async navigateTo(contract_id?: string): Promise<void> {
     const navigateToUpdateContractPage = container.resolve(
       NavigateToUpdateContractPageService,
     );
 
-    await navigateToUpdateContractPage.execute();
+    await navigateToUpdateContractPage.execute({ contract_id });
   }
 
-  public async updateProducts(
-    newProducts: IContractProductItemContaAzul[],
-  ): Promise<void> {
-    const updateContractProducts = container.resolve(
-      UpdateContractProductsService,
-    );
+  public async update({
+    products,
+    description,
+  }: IUpdateContractDTO): Promise<void> {
+    const updateContract = container.resolve(UpdateContractService);
 
-    await updateContractProducts.execute({ products: newProducts });
+    await updateContract.execute(
+      { products, description },
+      contaAzulConfig.testing.dont_save,
+    );
   }
 }
 

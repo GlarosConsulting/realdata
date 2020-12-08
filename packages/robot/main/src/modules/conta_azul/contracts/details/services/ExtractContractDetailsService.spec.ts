@@ -72,11 +72,13 @@ describe('ExtractContractDetails', () => {
 
     expect(contractDetails).toEqual(
       expect.objectContaining({
+        id: expect.any(String),
         start_date: expect.any(Date),
         next_billing_date: expect.any(Date),
         frequency: expect.any(String),
         charging: expect.any(String),
         remaining_validity: expect.any(String),
+        description: expect.any(String),
         products: expect.arrayContaining([
           expect.objectContaining({
             name: expect.any(String),

@@ -21,12 +21,14 @@ import ContaAzulBillToReceiveMainPage from '@modules/conta_azul/bills_to_receive
 import ContaAzulContractsCreatePage from '@modules/conta_azul/contracts/create/infra/puppeteer/pages/ContaAzulContractsCreatePage';
 import ContaAzulContractsDetailsPage from '@modules/conta_azul/contracts/details/infra/puppeteer/pages/ContaAzulContractsDetailsPage';
 import ContaAzulContractsMainPage from '@modules/conta_azul/contracts/main/infra/puppeteer/pages/ContaAzulContractsMainPage';
+import ContaAzulContractsUpdatePage from '@modules/conta_azul/contracts/update/infra/puppeteer/pages/ContaAzulContractsUpdatePage';
 import ContaAzulCustomersCreatePage from '@modules/conta_azul/customers/create/infra/puppeteer/pages/ContaAzulCustomersCreatePage';
 import ContaAzulCustomersMainPage from '@modules/conta_azul/customers/main/infra/puppeteer/pages/ContaAzulCustomersMainPage';
 import ContaAzulLogInHandler from '@modules/conta_azul/login/infra/handlers';
 import CustomersDetailsAddressIXCPage from '@modules/ixc/customers/details/address/infra/puppeteer/pages/CustomersDetailsAddressIXCPage';
 import CustomersDetailsContactIXCPage from '@modules/ixc/customers/details/contact/infra/puppeteer/pages/CustomersDetailsContactIXCPage';
 import CustomersDetailsContractIXCPage from '@modules/ixc/customers/details/contract/infra/puppeteer/pages/CustomersDetailsContractIXCPage';
+import IContractIXC from '@modules/ixc/customers/details/contract/models/IContractIXC';
 import CustomersDetailsFinanceIXCPage from '@modules/ixc/customers/details/finance/infra/puppeteer/pages/CustomersDetailsFinanceIXCPage';
 import CustomersDetailsMainIXCPage from '@modules/ixc/customers/details/main/infra/puppeteer/pages/CustomersDetailsMainIXCPage';
 import CustomersMainIXCPage from '@modules/ixc/customers/main/infra/puppeteer/pages/CustomersMainIXCPage';
@@ -63,6 +65,8 @@ export default class Launcher {
 
     timer.start();
 
+    const ixcAttempts: { [key: string]: number } = {};
+
     const switchPage = (page: Page) => {
       page.driver.bringToFront();
       container.registerInstance('Page', page);
@@ -83,7 +87,7 @@ export default class Launcher {
         value: String(ixc_id),
       });
 
-      if (!ixcCustomer || !ixcCustomer.active) {
+      if (!ixcCustomer) {
         return;
       }
 
@@ -130,10 +134,6 @@ export default class Launcher {
       console.log(JSON.stringify(extendedCustomerIxc));
       console.log();
 
-      if (!extendedCustomerIxc.details.main.birth_date) {
-        return;
-      }
-
       try {
         switchPage(pages.conta_azul);
 
@@ -147,7 +147,15 @@ export default class Launcher {
           value: extendedCustomerIxc.document,
         });
 
+        const ixcActiveContracts = extendedCustomerIxc.details.contracts.filter(
+          item => item.status,
+        );
+
         if (!contaAzulCustomer) {
+          if (!extendedCustomerIxc.details.main.birth_date) {
+            return;
+          }
+
           const contaAzulCustomersCreatePage = new ContaAzulCustomersCreatePage();
 
           await contaAzulCustomersCreatePage.navigateTo();
@@ -195,9 +203,7 @@ export default class Launcher {
             };
           }
 
-          for (const contract of extendedCustomerIxc.details.contracts.filter(
-            item => item.status,
-          )) {
+          for (const contract of ixcActiveContracts) {
             await contaAzulContractsCreatePage.navigateTo();
 
             let always_charge_on_day: number;
@@ -231,9 +237,16 @@ export default class Launcher {
               }).toISOString(),
               always_charge_on_day,
               products: contractProducts,
+              ixc_contract_id: contract.id,
             });
           }
         } else {
+          if (!extendedCustomerIxc.active) {
+            await contaAzulCustomersMainPage.disable(contaAzulCustomer.name);
+
+            return;
+          }
+
           const contaAzulContractsMainPage = new ContaAzulContractsMainPage();
 
           await contaAzulContractsMainPage.navigateTo();
@@ -242,27 +255,93 @@ export default class Launcher {
             contaAzulCustomer.name,
           );
 
-          const extendedContracts: IExtendedContractContaAzul[] = [];
+          const contaAzulActiveContracts = contaAzulContracts.filter(
+            contract => contract.active,
+          );
 
-          for (const contract of contaAzulContracts) {
+          const extendedContaAzulContracts: IExtendedContractContaAzul[] = [];
+
+          for (const contaAzulContract of contaAzulActiveContracts) {
             const contaAzulContractsDetailsPage = new ContaAzulContractsDetailsPage();
 
-            await contaAzulContractsDetailsPage.navigateTo(contract);
+            await contaAzulContractsDetailsPage.navigateTo(contaAzulContract);
 
             const contractDetails = await contaAzulContractsDetailsPage.getDetails();
 
             const extendedContract: IExtendedContractContaAzul = {
-              ...contract,
+              ...contaAzulContract,
               details: contractDetails,
             };
 
-            extendedContracts.push(extendedContract);
+            extendedContaAzulContracts.push(extendedContract);
 
-            await contaAzulContractsMainPage.navigateTo();
+            if (
+              contaAzulActiveContracts.indexOf(contaAzulContract) <
+              contaAzulActiveContracts.length - 1
+            ) {
+              await contaAzulContractsMainPage.navigateTo();
 
-            await contaAzulContractsMainPage.findByCustomerName(
-              contaAzulCustomer.name,
+              await contaAzulContractsMainPage.findByCustomerName(
+                contaAzulCustomer.name,
+              );
+            }
+          }
+
+          const linkedContracts: Array<{
+            ixc: IContractIXC;
+            conta_azul: IExtendedContractContaAzul;
+          }> = [];
+
+          for (const ixcContract of ixcActiveContracts) {
+            const contractProducts = formatIxcContractProductsToContaAzul(
+              ixcContract.products.items,
             );
+
+            const filteredSimilarContaAzulContracts = extendedContaAzulContracts.filter(
+              contaAzulContract => {
+                const checkContainsEveryProduct = contaAzulContract.details.products.every(
+                  contaAzulProduct =>
+                    contractProducts.some(
+                      ixcProduct => ixcProduct.name === contaAzulProduct.name,
+                    ),
+                );
+
+                return (
+                  contaAzulContract.monthly_value ===
+                    ixcContract.products.gross_value &&
+                  checkContainsEveryProduct
+                );
+              },
+            );
+
+            if (filteredSimilarContaAzulContracts.length === 0) {
+              console.log('NOT FOUND ANY SIMILAR CONTRACT');
+              continue;
+            }
+
+            if (filteredSimilarContaAzulContracts.length > 1) {
+              console.log('MORE THAN ONE SIMILAR');
+              continue;
+            }
+
+            linkedContracts.push({
+              ixc: ixcContract,
+              conta_azul: filteredSimilarContaAzulContracts[0],
+            });
+          }
+
+          const contaAzulContractsUpdatePage = new ContaAzulContractsUpdatePage();
+
+          for (const linkedContract of linkedContracts) {
+            if (!linkedContract.conta_azul.details.description) {
+              await contaAzulContractsUpdatePage.navigateTo(
+                linkedContract.conta_azul.details.id,
+              );
+
+              await contaAzulContractsUpdatePage.update({
+                description: `ID Contrato IXC: ${linkedContract.ixc.id}`,
+              });
+            }
           }
         }
 
@@ -440,8 +519,6 @@ export default class Launcher {
       // const ixcIds = ['10930']; // Luis Otavio Soares de Andrade
       // const ixcIds = ['11559']; // Thiago de Queiroz
 
-      console.log(startIxcId);
-
       const ixcIds: number[] = [];
 
       for (let i = startIxcId; i < 14233; i++) {
@@ -455,27 +532,39 @@ export default class Launcher {
       } catch (err) {
         if (err instanceof ProcessingContaAzulError) {
           const ixcId = Number(err.ixc.id);
-          const nextIxcId = ixcId + 1;
+          let nextIxcId = ixcId + 1;
+
+          const attempts = ixcAttempts[ixcId] || 0;
 
           console.log();
           console.log(
             'Occurred an unexpected error while processing IXC ID:',
             ixcId,
           );
-          console.log('Skipping to:', nextIxcId);
-          console.log();
 
-          try {
-            await api.post('/logs', {
-              date: new Date(),
-              ixc_id: `${err.ixc.id} - ${err.ixc.name}`,
-              projection_id: 'Erro no Conta Azul',
-              conta_azul_existing: false,
-              discharge_performed: false,
-            });
-          } catch {
-            // ignore catch block
+          if (attempts >= 1) {
+            console.log('Skipping to:', nextIxcId);
+            console.log();
+
+            try {
+              await api.post('/logs', {
+                date: new Date(),
+                ixc_id: `${err.ixc.id} - ${err.ixc.name}`,
+                projection_id: 'Erro no Conta Azul',
+                conta_azul_existing: false,
+                discharge_performed: false,
+              });
+            } catch {
+              // ignore catch block
+            }
+          } else {
+            console.log('Trying again...');
+            console.log();
+
+            nextIxcId = ixcId;
           }
+
+          ixcAttempts[ixcId] = attempts + 1;
 
           await run(nextIxcId);
 
@@ -488,7 +577,9 @@ export default class Launcher {
       }
     };
 
-    await run(13263);
+    // await run(13263);
+    // await run(10814);
+    await run();
 
     timer.stop();
 

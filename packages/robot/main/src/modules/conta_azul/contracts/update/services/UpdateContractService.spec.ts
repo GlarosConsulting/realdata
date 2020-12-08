@@ -14,7 +14,7 @@ import AuthenticateUserService from '@modules/conta_azul/login/services/Authenti
 import NavigateToLogInPageService from '@modules/conta_azul/login/services/NavigateToLogInPageService';
 
 import NavigateToUpdateContractPageService from './NavigateToUpdateContractPageService';
-import UpdateContractProductsService from './UpdateContractProductsService';
+import UpdateContractService from './UpdateContractService';
 
 let puppeteerBrowserProvider: PuppeteerBrowserProvider;
 let navigateToLogInPage: NavigateToLogInPageService;
@@ -23,12 +23,12 @@ let navigateToContractsPage: NavigateToContractsPageService;
 let findContractsByCustomerName: FindContractsByCustomerNameService;
 let navigateToContractDetailsPage: NavigateToContractDetailsPageService;
 let navigateToUpdateContractPage: NavigateToUpdateContractPageService;
-let updateContractProducts: UpdateContractProductsService;
+let updateContract: UpdateContractService;
 
 let browser: Browser;
 let page: Page;
 
-describe('UpdateContractProducts', () => {
+describe('UpdateContract', () => {
   beforeAll(async () => {
     puppeteerBrowserProvider = new PuppeteerBrowserProvider();
 
@@ -48,7 +48,7 @@ describe('UpdateContractProducts', () => {
     navigateToUpdateContractPage = new NavigateToUpdateContractPageService(
       page,
     );
-    updateContractProducts = new UpdateContractProductsService(page);
+    updateContract = new UpdateContractService(page);
   });
 
   afterAll(async () => {
@@ -82,7 +82,7 @@ describe('UpdateContractProducts', () => {
 
     const testingContract = testingCustomer.ixc.details.contracts[0];
 
-    await updateContractProducts.execute(
+    await updateContract.execute(
       {
         products: formatIxcContractProductsToContaAzul(
           testingContract.products.items,
