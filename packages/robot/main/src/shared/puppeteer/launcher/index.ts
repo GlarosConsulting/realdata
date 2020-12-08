@@ -7,6 +7,7 @@ import IBrowser from '@robot/shared/modules/browser/models/IBrowser';
 import IBrowserProvider from '@robot/shared/modules/browser/providers/BrowserProvider/models/IBrowserProvider';
 
 import formatIxcContractProductsToContaAzul from '@utils/formatIxcContractProductsToContaAzul';
+import sleep from '@utils/sleep';
 import Timer from '@utils/timer';
 
 import ICacheProvider from '@shared/container/providers/CacheProvider/models/ICacheProvider';
@@ -566,6 +567,8 @@ export default class Launcher {
 
           ixcAttempts[ixcId] = attempts + 1;
 
+          await sleep(2500);
+
           await run(nextIxcId);
 
           return;
@@ -577,8 +580,6 @@ export default class Launcher {
       }
     };
 
-    // await run(13263);
-    // await run(10814);
     await run();
 
     timer.stop();
