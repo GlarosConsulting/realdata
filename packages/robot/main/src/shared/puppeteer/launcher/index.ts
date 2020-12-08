@@ -152,6 +152,16 @@ export default class Launcher {
           item => item.status,
         );
 
+        if (!extendedCustomerIxc.active) {
+          if (!contaAzulCustomer) {
+            return;
+          }
+
+          await contaAzulCustomersMainPage.disable(contaAzulCustomer.name);
+
+          return;
+        }
+
         if (!contaAzulCustomer) {
           if (!extendedCustomerIxc.details.main.birth_date) {
             return;
@@ -242,12 +252,6 @@ export default class Launcher {
             });
           }
         } else {
-          if (!extendedCustomerIxc.active) {
-            await contaAzulCustomersMainPage.disable(contaAzulCustomer.name);
-
-            return;
-          }
-
           const contaAzulContractsMainPage = new ContaAzulContractsMainPage();
 
           await contaAzulContractsMainPage.navigateTo();
