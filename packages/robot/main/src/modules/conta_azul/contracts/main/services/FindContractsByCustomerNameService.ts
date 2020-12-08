@@ -48,9 +48,11 @@ export default class FindContractsByCustomerNameService {
     await sleep(500);
 
     try {
-      await this.page.driver.waitForSelector('#conteudo > table > tbody > tr');
+      await this.page.driver.waitForSelector('#conteudo > table > tbody > tr', {
+        timeout: 5000,
+      });
     } catch {
-      return null;
+      return [];
     }
 
     await sleep(1000);
