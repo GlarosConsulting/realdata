@@ -213,7 +213,21 @@ export default class Launcher {
               active: true,
             };
           }
+        }
 
+        const contaAzulContractsMainPage = new ContaAzulContractsMainPage();
+
+        await contaAzulContractsMainPage.navigateTo();
+
+        const contaAzulContracts = await contaAzulContractsMainPage.findByCustomerName(
+          contaAzulCustomer.name,
+        );
+
+        const contaAzulActiveContracts = contaAzulContracts.filter(
+          contract => contract.active,
+        );
+
+        if (contaAzulActiveContracts.length === 0) {
           for (const contract of ixcActiveContracts) {
             await contaAzulContractsCreatePage.navigateTo();
 
@@ -252,18 +266,6 @@ export default class Launcher {
             });
           }
         } else {
-          const contaAzulContractsMainPage = new ContaAzulContractsMainPage();
-
-          await contaAzulContractsMainPage.navigateTo();
-
-          const contaAzulContracts = await contaAzulContractsMainPage.findByCustomerName(
-            contaAzulCustomer.name,
-          );
-
-          const contaAzulActiveContracts = contaAzulContracts.filter(
-            contract => contract.active,
-          );
-
           const extendedContaAzulContracts: IExtendedContractContaAzul[] = [];
 
           for (const contaAzulContract of contaAzulActiveContracts) {
@@ -348,6 +350,8 @@ export default class Launcher {
               });
             }
           }
+
+          // TODO: create contracts
         }
 
         const contaAzulBillToReceiveMainPage = new ContaAzulBillToReceiveMainPage();
@@ -580,7 +584,10 @@ export default class Launcher {
         await launchBrowserAndPages(ixcIds);
       } catch (err) {
         const ixcId = await this.cacheProvider.recover<number>('last-ixc-id');
-        let nextIxcId = ixcId + 1;
+
+        const indexOf = ixcIds.findIndex(id => id === ixcId);
+
+        let nextIxcId = ixcIds[indexOf + 1];
 
         const attempts = ixcAttempts[ixcId] || 0;
 
