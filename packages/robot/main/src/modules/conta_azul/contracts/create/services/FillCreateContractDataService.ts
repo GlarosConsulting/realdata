@@ -32,12 +32,18 @@ export default class FillCreateContractDataService {
       document: document_value,
       category,
       sell_date,
-      always_charge_on_day,
+      always_charge_on_day: original_always_charge_on_day,
       products,
       ixc_contract_id,
     }: IRequest,
     dontSave = true,
   ): Promise<void> {
+    let always_charge_on_day = original_always_charge_on_day;
+
+    if (always_charge_on_day) {
+      always_charge_on_day = 29;
+    }
+
     const [
       findCreateContractIdentifierElement,
     ] = await this.page.findElementsBySelector(

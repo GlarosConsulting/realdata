@@ -66,19 +66,16 @@ describe('FillCreateContractData', () => {
     const testingCustomer = testingCustomersConfig[3];
     const testingContract = testingCustomer.ixc.details.contracts[0];
 
-    await fillCreateContractData.execute(
-      {
-        name: testingContract.customer_name,
-        document: testingCustomer.document,
-        category: 'Vendas',
-        sell_date: addDays(testingContract.activation_date, 2).toISOString(),
-        always_charge_on_day: 5,
-        products: formatIxcContractProductsToContaAzul(
-          testingContract.products.items,
-        ),
-        ixc_contract_id: testingContract.id,
-      },
-      false,
-    );
+    await fillCreateContractData.execute({
+      name: testingContract.customer_name,
+      document: testingCustomer.document,
+      category: 'Vendas',
+      sell_date: addDays(testingContract.activation_date, 2).toISOString(),
+      always_charge_on_day: 30,
+      products: formatIxcContractProductsToContaAzul(
+        testingContract.products.items,
+      ),
+      ixc_contract_id: testingContract.id,
+    });
   });
 });
