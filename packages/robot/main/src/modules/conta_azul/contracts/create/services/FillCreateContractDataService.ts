@@ -197,7 +197,7 @@ export default class FillCreateContractDataService {
       `ID Contrato IXC: ${ixc_contract_id}`,
     );
 
-    await sleep(500);
+    await sleep(1000);
 
     if (!dontSave) {
       const [findSaveButtonElement] = await this.page.findElementsBySelector(
@@ -209,7 +209,7 @@ export default class FillCreateContractDataService {
       await sleep(2000);
 
       await this.page.driver.waitForSelector(
-        '#gateway > section > div.ds-action-bar__container > div > nav > div > div > div.ds-action-bar__left > div > button',
+        '#conteudo > div:nth-child(2) > div:nth-child(3) > div.col-xs-6 > permission-based-link > ca-link > span > ca-button > button > ng-transclude > ng-transclude > span > span',
       );
     }
   }

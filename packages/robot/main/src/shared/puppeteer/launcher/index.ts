@@ -597,7 +597,7 @@ export default class Launcher {
           ixcId,
         );
 
-        if (attempts >= 1) {
+        if (attempts >= 2) {
           console.log('Skipping to:', nextIxcId);
           console.log();
 
