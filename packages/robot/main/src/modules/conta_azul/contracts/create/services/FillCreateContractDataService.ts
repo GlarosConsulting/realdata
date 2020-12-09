@@ -209,7 +209,7 @@ export default class FillCreateContractDataService {
       await sleep(2000);
 
       await this.page.driver.waitForSelector(
-        '#conteudo > div:nth-child(1) > div:nth-child(2) > button',
+        '#gateway > section > div.ds-action-bar__container > div > nav > div > div > div.ds-action-bar__left > div > button',
       );
     }
   }
