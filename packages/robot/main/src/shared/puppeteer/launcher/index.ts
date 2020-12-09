@@ -489,6 +489,8 @@ export default class Launcher {
         console.log();
         console.log('IXC ID:', ixcId);
 
+        this.cacheProvider.save('last-ixc-id', ixcId);
+
         try {
           await runPagesFlow({
             pages: {
@@ -505,7 +507,7 @@ export default class Launcher {
           }
         }
 
-        this.cacheProvider.save('last-ixc-id', ixcId);
+        this.cacheProvider.save('last-success-ixc-id', ixcId);
       }
 
       await browser.close();
@@ -535,52 +537,44 @@ export default class Launcher {
       try {
         await launchBrowserAndPages(ixcIds);
       } catch (err) {
-        if (err instanceof ProcessingContaAzulError) {
-          const ixcId = Number(err.ixc.id);
-          let nextIxcId = ixcId + 1;
+        const ixcId = await this.cacheProvider.recover<number>('last-ixc-id');
+        let nextIxcId = ixcId + 1;
 
-          const attempts = ixcAttempts[ixcId] || 0;
+        const attempts = ixcAttempts[ixcId] || 0;
 
+        console.log();
+        console.log(
+          'Occurred an unexpected error while processing IXC ID:',
+          ixcId,
+        );
+
+        if (attempts >= 1) {
+          console.log('Skipping to:', nextIxcId);
           console.log();
-          console.log(
-            'Occurred an unexpected error while processing IXC ID:',
-            ixcId,
-          );
 
-          if (attempts >= 1) {
-            console.log('Skipping to:', nextIxcId);
-            console.log();
-
-            try {
-              await api.post('/logs', {
-                date: new Date(),
-                ixc_id: `${err.ixc.id} - ${err.ixc.name}`,
-                projection_id: 'Erro no Conta Azul',
-                conta_azul_existing: false,
-                discharge_performed: false,
-              });
-            } catch {
-              // ignore catch block
-            }
-          } else {
-            console.log('Trying again...');
-            console.log();
-
-            nextIxcId = ixcId;
+          try {
+            await api.post('/logs', {
+              date: new Date(),
+              ixc_id: `${err.ixc.id} - ${err.ixc.name}`,
+              projection_id: 'Erro no Conta Azul',
+              conta_azul_existing: false,
+              discharge_performed: false,
+            });
+          } catch {
+            // ignore catch block
           }
+        } else {
+          console.log('Trying again...');
+          console.log();
 
-          ixcAttempts[ixcId] = attempts + 1;
-
-          await sleep(2500);
-
-          await run(nextIxcId);
-
-          return;
+          nextIxcId = ixcId;
         }
 
-        console.log();
-        console.log('Occurred an unexpected error: ', err);
-        console.log();
+        ixcAttempts[ixcId] = attempts + 1;
+
+        await sleep(5000);
+
+        await run(nextIxcId);
       }
     };
 
