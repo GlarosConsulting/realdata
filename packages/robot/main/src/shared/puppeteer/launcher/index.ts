@@ -526,11 +526,53 @@ export default class Launcher {
       // const ixcIds = ['10930']; // Luis Otavio Soares de Andrade
       // const ixcIds = ['11559']; // Thiago de Queiroz
 
-      const ixcIds: number[] = [];
+      const ixcIds = [
+        13260,
+        13388,
+        13402,
+        13492,
+        13493,
+        13577,
+        13585,
+        13591,
+        13636,
+        13654,
+        13668,
+        13769,
+        13817,
+        13818,
+        13819,
+        13820,
+        13821,
+        13823,
+        13825,
+        13826,
+        13827,
+        13830,
+        13896,
+        13900,
+        13920,
+        14022,
+        12161,
+        12210,
+        12224,
+        12406,
+        10796,
+        10863,
+        10902,
+        10814,
+        10930,
+        12625,
+        13619,
+        13678,
+        13679,
+      ]; // WITH ERROR
 
-      for (let i = startIxcId; i < 14430; i++) {
-        ixcIds.push(i);
-      }
+      // const ixcIds: number[] = [];
+
+      // for (let i = startIxcId; i < 14430; i++) {
+      //   ixcIds.push(i);
+      // }
 
       // console.log('IDs:', JSON.stringify(ixcIds));
 
