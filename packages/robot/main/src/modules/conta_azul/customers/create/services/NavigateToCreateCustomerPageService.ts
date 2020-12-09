@@ -15,7 +15,7 @@ export default class NavigateToCreateCustomerPageService {
     const [
       findCreateCustomerButtonElement,
     ] = await this.page.findElementsBySelector(
-      '#gateway > section > div > div.ds-page > nav > div > div > div.ds-action-bar__left > div > button',
+      '#gateway > section > div.ds-action-bar__container > div > nav > div > div > div.ds-action-bar__left > div > button',
     );
 
     findCreateCustomerButtonElement.click();
