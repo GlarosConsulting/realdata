@@ -491,6 +491,10 @@ export default class Launcher {
                   contract => contract.id === receivedBill.contract_r,
                 );
 
+                if (!ixcContract) {
+                  return false;
+                }
+
                 const findAddressChangeRequest = ixcContract.details.additional_services.find(
                   item =>
                     item.description
@@ -498,38 +502,39 @@ export default class Launcher {
                       .includes('mudança de endereço'),
                 );
 
-                if (findAddressChangeRequest) {
-                  const repeatAmount =
-                    findAddressChangeRequest.repeat_amount + 1;
-
-                  const isValidMonth = createRangeArray(0, repeatAmount).some(
-                    amount => {
-                      const dateMoreMonthAmount = addMonths(
-                        findAddressChangeRequest.date,
-                        amount,
-                      );
-
-                      return isSameMonth(
-                        receivedBill.due_date,
-                        dateMoreMonthAmount,
-                      );
-                    },
-                  );
-
-                  const valueWithTax =
-                    billToReceive.value + findAddressChangeRequest.unit_value;
-
-                  if (receivedBill.value === valueWithTax && isValidMonth) {
-                    addressChangeRequest = findAddressChangeRequest;
-
-                    return true;
-                  }
-
+                if (!findAddressChangeRequest) {
                   return false;
                 }
+
+                const repeatAmount = findAddressChangeRequest.repeat_amount + 1;
+
+                const isValidMonth = createRangeArray(0, repeatAmount).some(
+                  amount => {
+                    const dateMoreMonthAmount = addMonths(
+                      findAddressChangeRequest.date,
+                      amount,
+                    );
+
+                    return isSameMonth(
+                      receivedBill.due_date,
+                      dateMoreMonthAmount,
+                    );
+                  },
+                );
+
+                const valueWithTax =
+                  billToReceive.value + findAddressChangeRequest.unit_value;
+
+                if (receivedBill.value === valueWithTax && isValidMonth) {
+                  addressChangeRequest = findAddressChangeRequest;
+
+                  return true;
+                }
+
+                return false;
               }
 
-              return billToReceive.value === receivedBill.value;
+              return true;
             },
           );
 
@@ -1002,7 +1007,7 @@ export default class Launcher {
 
     const formattedTimer = timer.format();
 
-    console.log(ixcRealIds);
+    console.log('\nReal IXC IDs:', JSON.stringify(ixcRealIds));
     console.log(`\nElapsed time: ${formattedTimer}`);
   }
 }
