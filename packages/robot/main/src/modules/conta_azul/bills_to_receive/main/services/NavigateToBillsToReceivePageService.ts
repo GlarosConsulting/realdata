@@ -16,6 +16,8 @@ export default class NavigateToBillsToReceivePageService {
   public async execute(): Promise<void> {
     await this.page.goTo(contaAzulConfig.pages.bills_to_receive.url);
 
+    await sleep(2000);
+
     await this.page.driver.waitForSelector(
       '#addFinance > button.btn.btn-primary.primary-action',
     );
@@ -32,6 +34,8 @@ export default class NavigateToBillsToReceivePageService {
         )
         .click();
     });
+
+    await sleep(2000);
 
     await this.page.driver.waitForSelector('table > tbody > tr > td');
 
@@ -55,7 +59,7 @@ export default class NavigateToBillsToReceivePageService {
 
     await findAllFilterOptionElement.click();
 
-    await sleep(500);
+    await sleep(1000);
 
     const [
       findExpiredFilterOptionElement,
@@ -65,7 +69,7 @@ export default class NavigateToBillsToReceivePageService {
 
     await findExpiredFilterOptionElement.click();
 
-    await sleep(500);
+    await sleep(1000);
 
     const [
       findOpenStatementsFilterOptionElement,
@@ -75,7 +79,7 @@ export default class NavigateToBillsToReceivePageService {
 
     await findOpenStatementsFilterOptionElement.click();
 
-    await sleep(500);
+    await sleep(1000);
 
     const [
       findApplyFiltersButtonElements,

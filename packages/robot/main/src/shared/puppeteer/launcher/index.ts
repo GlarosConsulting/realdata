@@ -681,7 +681,7 @@ export default class Launcher {
 
         const indexOf = ixcIds.findIndex(id => id === ixcId);
 
-        if (ixcIds.length >= indexOf + 1) {
+        if (ixcIds.length <= indexOf + 1) {
           return;
         }
 
@@ -711,7 +711,7 @@ export default class Launcher {
             // ignore catch block
           }
         } else {
-          console.log('Trying again...');
+          console.log(`[${attempts + 1}] Trying again...`);
           console.log();
 
           nextIxcId = ixcId;
