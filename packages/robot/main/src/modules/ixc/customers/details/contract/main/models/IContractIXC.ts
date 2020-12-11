@@ -1,5 +1,3 @@
-import IContractProducts from '@modules/ixc/customers/details/contract/models/IContractProducts';
-
 export default interface IContractIXC {
   id: string;
   fil: string;
@@ -10,5 +8,4 @@ export default interface IContractIXC {
   base_date: Date;
   type: string;
   description: string;
-  products: IContractProducts;
 }

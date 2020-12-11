@@ -1,4 +1,4 @@
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { injectable, inject } from 'tsyringe';
 
 import AppError from '@robot/shared/errors/AppError';
@@ -8,9 +8,10 @@ import sleep from '@utils/sleep';
 
 interface IRequest {
   account: string;
-  received_date: string;
+  received_date: Date;
   discount: number;
   interest: number;
+  value?: number;
   paid: number;
   transaction_id: string;
   sell_id: string;
@@ -29,6 +30,7 @@ export default class FillBillToReceiveDetailsDataService {
       received_date,
       discount,
       interest,
+      value,
       paid,
       transaction_id,
       sell_id,
@@ -67,6 +69,17 @@ export default class FillBillToReceiveDetailsDataService {
 
     await sleep(1000);
 
+    if (value !== undefined) {
+      /* istanbul ignore next */
+      await this.page.evaluate(evaluatedValue => {
+        document.querySelector<HTMLInputElement>('#valor').value = String(
+          evaluatedValue,
+        ).replace('.', ',');
+      }, value);
+
+      await sleep(1000);
+    }
+
     const [
       findReceivedCheckboxElement,
     ] = await this.page.findElementsBySelector(
@@ -82,7 +95,7 @@ export default class FillBillToReceiveDetailsDataService {
       document.querySelector<HTMLInputElement>(
         '#dtBaixa',
       ).value = formattedDate;
-    }, format(parseISO(received_date), 'dd/MM/yyyy'));
+    }, format(received_date, 'dd/MM/yyyy'));
     await sleep(1000);
 
     const [findDiscountInputElement] = await this.page.findElementsBySelector(
@@ -108,9 +121,9 @@ export default class FillBillToReceiveDetailsDataService {
     await sleep(500);
 
     /* istanbul ignore next */
-    await this.page.evaluate(value => {
+    await this.page.evaluate(amountPaid => {
       document.querySelector<HTMLInputElement>('#amountPaid').value = String(
-        value,
+        amountPaid,
       ).replace('.', ',');
     }, paid);
 
@@ -161,7 +174,7 @@ export default class FillBillToReceiveDetailsDataService {
 
         await this.page.typeToElement(
           findReceivedDateDatePickerElement2,
-          format(parseISO(received_date), 'dd/MM/yyyy'),
+          format(received_date, 'dd/MM/yyyy'),
         );
 
         await sleep(500);

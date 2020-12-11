@@ -1,4 +1,13 @@
-import { addDays, isAfter, isBefore, set as setDate, subDays } from 'date-fns';
+import {
+  set as setDate,
+  addDays,
+  subDays,
+  addMonths,
+  isAfter,
+  isBefore,
+  isSameMonth,
+  isEqual as isDateEqual,
+} from 'date-fns';
 import { container, injectable, inject } from 'tsyringe';
 
 import Browser from '@robot/shared/modules/browser/infra/puppeteer/models/Browser';
@@ -6,6 +15,7 @@ import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 import IBrowser from '@robot/shared/modules/browser/models/IBrowser';
 import IBrowserProvider from '@robot/shared/modules/browser/providers/BrowserProvider/models/IBrowserProvider';
 
+import createRangeArray from '@utils/createRangeArray';
 import formatIxcContractProductsToContaAzul from '@utils/formatIxcContractProductsToContaAzul';
 import sleep from '@utils/sleep';
 import Timer from '@utils/timer';
@@ -13,8 +23,9 @@ import Timer from '@utils/timer';
 import ICacheProvider from '@shared/container/providers/CacheProvider/models/ICacheProvider';
 import IConfigurationProvider from '@shared/container/providers/ConfigurationProvider/models/IConfigurationProvider';
 import ProcessingContaAzulError from '@shared/errors/ProcessingContaAzulError';
-import IExtendedContractContaAzul from '@shared/models/IExtendedContractContaAzul';
-import IExtendedCustomerIXC from '@shared/models/IExtendedCustomerIXC';
+import IExtendedContractContaAzul from '@shared/models/conta_azul/IExtendedContractContaAzul';
+import IExtendedContractIXC from '@shared/models/ixc/IExtendedContractIXC';
+import IExtendedCustomerIXC from '@shared/models/ixc/IExtendedCustomerIXC';
 import api from '@shared/services/api';
 
 import ContaAzulBillsToReceiveDetailsPage from '@modules/conta_azul/bills_to_receive/details/infra/puppeteer/pages/ContaAzulBillsToReceiveDetailsPage';
@@ -28,8 +39,11 @@ import ContaAzulCustomersMainPage from '@modules/conta_azul/customers/main/infra
 import ContaAzulLogInHandler from '@modules/conta_azul/login/infra/handlers';
 import CustomersDetailsAddressIXCPage from '@modules/ixc/customers/details/address/infra/puppeteer/pages/CustomersDetailsAddressIXCPage';
 import CustomersDetailsContactIXCPage from '@modules/ixc/customers/details/contact/infra/puppeteer/pages/CustomersDetailsContactIXCPage';
-import CustomersDetailsContractIXCPage from '@modules/ixc/customers/details/contract/infra/puppeteer/pages/CustomersDetailsContractIXCPage';
-import IContractIXC from '@modules/ixc/customers/details/contract/models/IContractIXC';
+import CustomersDetailsContractDetailsAdditionalServicesIXCPage from '@modules/ixc/customers/details/contract/details/additional_services/infra/puppeteer/pages/CustomersDetailsContractDetailsAdditionalServicesIXCPage';
+import IContractAdditionalServiceItem from '@modules/ixc/customers/details/contract/details/additional_services/models/IContractAdditionalServiceItem';
+import CustomersDetailsContractDetailsMainIXCPage from '@modules/ixc/customers/details/contract/details/main/infra/puppeteer/pages/CustomersDetailsContractDetailsMainIXCPage';
+import CustomersDetailsContractDetailsProductsIXCPage from '@modules/ixc/customers/details/contract/details/products/infra/puppeteer/pages/CustomersDetailsContractDetailsProductsIXCPage';
+import CustomersDetailsContractMainIXCPage from '@modules/ixc/customers/details/contract/main/infra/puppeteer/pages/CustomersDetailsContractMainIXCPage';
 import CustomersDetailsFinanceIXCPage from '@modules/ixc/customers/details/finance/infra/puppeteer/pages/CustomersDetailsFinanceIXCPage';
 import CustomersDetailsMainIXCPage from '@modules/ixc/customers/details/main/infra/puppeteer/pages/CustomersDetailsMainIXCPage';
 import CustomersMainIXCPage from '@modules/ixc/customers/main/infra/puppeteer/pages/CustomersMainIXCPage';
@@ -40,7 +54,7 @@ interface IRunPageFlow {
     ixc: Page;
     conta_azul: Page;
   };
-  ixc_id: number;
+  ixc_id: string;
 }
 
 @injectable()
@@ -66,6 +80,8 @@ export default class Launcher {
 
     timer.start();
 
+    const ixcRealIds: string[] = [];
+
     const ixcAttempts: { [key: string]: number } = {};
 
     const switchPage = (page: Page) => {
@@ -77,20 +93,27 @@ export default class Launcher {
       switchPage(pages.ixc);
 
       const customersMainIxcPage = new CustomersMainIXCPage();
+
       const customersDetailsMainIxcPage = new CustomersDetailsMainIXCPage();
       const customersDetailsAddressIxcPage = new CustomersDetailsAddressIXCPage();
       const customersDetailsContactIxcPage = new CustomersDetailsContactIXCPage();
       const customersDetailsFinanceIxcPage = new CustomersDetailsFinanceIXCPage();
-      const customersDetailsContractIxcPage = new CustomersDetailsContractIXCPage();
+
+      const customersDetailsContractMainIxcPage = new CustomersDetailsContractMainIXCPage();
+      const customersDetailsContractDetailsMainIxcPage = new CustomersDetailsContractDetailsMainIXCPage();
+      const customersDetailsContractDetailsProductsIxcPage = new CustomersDetailsContractDetailsProductsIXCPage();
+      const customersDetailsContractDetailsAdditionalServicesIxcPage = new CustomersDetailsContractDetailsAdditionalServicesIXCPage();
 
       const ixcCustomer = await customersMainIxcPage.findByField({
         field: 'id',
-        value: String(ixc_id),
+        value: ixc_id,
       });
 
       if (!ixcCustomer) {
         return;
       }
+
+      ixcRealIds.push(ixc_id);
 
       await customersDetailsMainIxcPage.open({
         customer_id: ixcCustomer.id,
@@ -113,9 +136,33 @@ export default class Launcher {
       const finances = await customersDetailsFinanceIxcPage.getAll();
 
       await customersDetailsMainIxcPage.navigateTo();
-      await customersDetailsContractIxcPage.navigateTo();
+      await customersDetailsContractMainIxcPage.navigateTo();
 
-      const ixcContracts = await customersDetailsContractIxcPage.getAll();
+      const extendedIxcContracts: IExtendedContractIXC[] = [];
+
+      const ixcContracts = await customersDetailsContractMainIxcPage.getAll();
+
+      for (const ixcContract of ixcContracts) {
+        await customersDetailsContractDetailsMainIxcPage.open(ixcContract);
+
+        await customersDetailsContractDetailsProductsIxcPage.navigateTo();
+
+        const productData = await customersDetailsContractDetailsProductsIxcPage.getData();
+
+        await customersDetailsContractDetailsAdditionalServicesIxcPage.navigateTo();
+
+        const additionalServices = await customersDetailsContractDetailsAdditionalServicesIxcPage.getAll();
+
+        extendedIxcContracts.push({
+          ...ixcContract,
+          details: {
+            products: productData,
+            additional_services: additionalServices,
+          },
+        });
+
+        await customersDetailsContractDetailsMainIxcPage.close();
+      }
 
       await customersDetailsMainIxcPage.navigateTo();
 
@@ -128,7 +175,7 @@ export default class Launcher {
           address: addressInfo,
           contact: contactInfo,
           finances,
-          contracts: ixcContracts,
+          contracts: extendedIxcContracts,
         },
       };
 
@@ -227,43 +274,59 @@ export default class Launcher {
           contract => contract.active,
         );
 
+        const createContract = async (ixcContract: IExtendedContractIXC) => {
+          const contractProducts = formatIxcContractProductsToContaAzul(
+            ixcContract.details.products.items,
+          );
+
+          if (contractProducts.length === 0) {
+            try {
+              await api.post('/logs', {
+                date: new Date(),
+                ixc_id: `${extendedCustomerIxc.id} - ${extendedCustomerIxc.name}`,
+                projection_id: 'Produto não mapeado',
+                conta_azul_existing: true,
+                discharge_performed: false,
+              });
+            } catch {
+              // ignore catch block
+            }
+
+            return;
+          }
+
+          await contaAzulContractsCreatePage.navigateTo();
+
+          let always_charge_on_day: number;
+
+          if (isBefore(ixcContract.activation_date, new Date(2020, 10, 13))) {
+            if (ixcContract.activation_date.getDate() <= 5) {
+              always_charge_on_day = 5;
+            } else if (ixcContract.activation_date.getDate() >= 6) {
+              always_charge_on_day = ixcContract.activation_date.getDate();
+            }
+          } else if (ixcContract.activation_date.getDate() <= 26) {
+            always_charge_on_day = ixcContract.activation_date.getDate();
+          } else if (ixcContract.activation_date.getDate() >= 27) {
+            always_charge_on_day = 26;
+          }
+
+          await contaAzulContractsCreatePage.create({
+            name: contaAzulCustomer.name,
+            document: extendedCustomerIxc.document,
+            category: 'Vendas',
+            sell_date: setDate(ixcContract.activation_date, {
+              date: always_charge_on_day + 1,
+            }),
+            always_charge_on_day,
+            products: contractProducts,
+            description: `ID Contrato IXC: ${ixcContract.id}`,
+          });
+        };
+
         if (contaAzulActiveContracts.length === 0) {
-          for (const contract of ixcActiveContracts) {
-            await contaAzulContractsCreatePage.navigateTo();
-
-            let always_charge_on_day: number;
-
-            if (isBefore(contract.activation_date, new Date(2020, 10, 13))) {
-              if (contract.activation_date.getDate() <= 5) {
-                always_charge_on_day = 5;
-              } else if (contract.activation_date.getDate() >= 6) {
-                always_charge_on_day = contract.activation_date.getDate();
-              }
-            } else if (contract.activation_date.getDate() <= 26) {
-              always_charge_on_day = contract.activation_date.getDate();
-            } else if (contract.activation_date.getDate() >= 27) {
-              always_charge_on_day = 26;
-            }
-
-            const contractProducts = formatIxcContractProductsToContaAzul(
-              contract.products.items,
-            );
-
-            if (contractProducts.length === 0) {
-              continue;
-            }
-
-            await contaAzulContractsCreatePage.create({
-              name: contaAzulCustomer.name,
-              document: extendedCustomerIxc.document,
-              category: 'Vendas',
-              sell_date: setDate(contract.activation_date, {
-                date: always_charge_on_day + 1,
-              }).toISOString(),
-              always_charge_on_day,
-              products: contractProducts,
-              ixc_contract_id: contract.id,
-            });
+          for (const ixcContract of ixcActiveContracts) {
+            await createContract(ixcContract);
           }
         } else {
           const extendedContaAzulContracts: IExtendedContractContaAzul[] = [];
@@ -295,17 +358,47 @@ export default class Launcher {
           }
 
           const linkedContracts: Array<{
-            ixc: IContractIXC;
-            conta_azul: IExtendedContractContaAzul;
+            ixc: IExtendedContractIXC;
+            conta_azul?: IExtendedContractContaAzul;
           }> = [];
 
           for (const ixcContract of ixcActiveContracts) {
             const contractProducts = formatIxcContractProductsToContaAzul(
-              ixcContract.products.items,
+              ixcContract.details.products.items,
             );
 
             const filteredSimilarContaAzulContracts = extendedContaAzulContracts.filter(
               contaAzulContract => {
+                const description = contaAzulContract.details.description.toLowerCase();
+
+                if (description.includes('id contrato ixc:')) {
+                  const ixcContractId = description
+                    .replace('id contrato ixc:', '')
+                    .trim();
+
+                  return ixcContractId === ixcContract.id;
+                }
+
+                let sell_date: number;
+
+                if (
+                  isBefore(ixcContract.activation_date, new Date(2020, 10, 13))
+                ) {
+                  if (ixcContract.activation_date.getDate() <= 5) {
+                    sell_date = 5;
+                  } else if (ixcContract.activation_date.getDate() >= 6) {
+                    sell_date = ixcContract.activation_date.getDate();
+                  }
+                } else if (ixcContract.activation_date.getDate() <= 26) {
+                  sell_date = ixcContract.activation_date.getDate();
+                } else if (ixcContract.activation_date.getDate() >= 27) {
+                  sell_date = 26;
+                }
+
+                const start_date = setDate(ixcContract.activation_date, {
+                  date: sell_date + 1,
+                });
+
                 const checkContainsEveryProduct = contaAzulContract.details.products.every(
                   contaAzulProduct =>
                     contractProducts.some(
@@ -315,19 +408,29 @@ export default class Launcher {
 
                 return (
                   contaAzulContract.monthly_value ===
-                    ixcContract.products.gross_value &&
+                    ixcContract.details.products.gross_value &&
+                  isDateEqual(
+                    contaAzulContract.details.start_date,
+                    start_date,
+                  ) &&
                   checkContainsEveryProduct
                 );
               },
             );
 
-            if (filteredSimilarContaAzulContracts.length === 0) {
-              console.log('NOT FOUND ANY SIMILAR CONTRACT');
-              continue;
-            }
+            if (filteredSimilarContaAzulContracts.length >= 2) {
+              try {
+                await api.post('/logs', {
+                  date: new Date(),
+                  ixc_id: `${extendedCustomerIxc.id} - ${extendedCustomerIxc.name}`,
+                  projection_id: 'Dois ou mais contratos idênticos',
+                  conta_azul_existing: true,
+                  discharge_performed: false,
+                });
+              } catch {
+                // ignore catch block
+              }
 
-            if (filteredSimilarContaAzulContracts.length > 1) {
-              console.log('MORE THAN ONE SIMILAR');
               continue;
             }
 
@@ -340,7 +443,9 @@ export default class Launcher {
           const contaAzulContractsUpdatePage = new ContaAzulContractsUpdatePage();
 
           for (const linkedContract of linkedContracts) {
-            if (!linkedContract.conta_azul.details.description) {
+            if (!linkedContract.conta_azul) {
+              await createContract(linkedContract.ixc);
+            } else if (!linkedContract.conta_azul?.details.description) {
               await contaAzulContractsUpdatePage.navigateTo(
                 linkedContract.conta_azul.details.id,
               );
@@ -350,8 +455,6 @@ export default class Launcher {
               });
             }
           }
-
-          // TODO: create contracts
         }
 
         const contaAzulBillToReceiveMainPage = new ContaAzulBillToReceiveMainPage();
@@ -368,20 +471,65 @@ export default class Launcher {
         const contaAzulBillsToReceiveDetailsPage = new ContaAzulBillsToReceiveDetailsPage();
 
         for (const billToReceive of billsToReceive) {
+          let addressChangeRequest: IContractAdditionalServiceItem;
+
           const filterReceivedBills = extendedCustomerIxc.details.finances.filter(
             receivedBill => {
               const dateLessThreeDays = subDays(billToReceive.date, 3);
               const dateMoreThreeDays = addDays(billToReceive.date, 3);
 
-              if (
-                billToReceive.value === receivedBill.value &&
+              const isDateValid =
                 isAfter(receivedBill.due_date, dateLessThreeDays) &&
-                isBefore(receivedBill.due_date, dateMoreThreeDays)
-              ) {
-                return true;
+                isBefore(receivedBill.due_date, dateMoreThreeDays);
+
+              if (!isDateValid) {
+                return false;
               }
 
-              return false;
+              if (billToReceive.value !== receivedBill.value) {
+                const ixcContract = extendedCustomerIxc.details.contracts.find(
+                  contract => contract.id === receivedBill.contract_r,
+                );
+
+                const findAddressChangeRequest = ixcContract.details.additional_services.find(
+                  item =>
+                    item.description
+                      .toLowerCase()
+                      .includes('mudança de endereço'),
+                );
+
+                if (findAddressChangeRequest) {
+                  const repeatAmount =
+                    findAddressChangeRequest.repeat_amount + 1;
+
+                  const isValidMonth = createRangeArray(0, repeatAmount).some(
+                    amount => {
+                      const dateMoreMonthAmount = addMonths(
+                        findAddressChangeRequest.date,
+                        amount,
+                      );
+
+                      return isSameMonth(
+                        receivedBill.due_date,
+                        dateMoreMonthAmount,
+                      );
+                    },
+                  );
+
+                  const valueWithTax =
+                    billToReceive.value + findAddressChangeRequest.unit_value;
+
+                  if (receivedBill.value === valueWithTax && isValidMonth) {
+                    addressChangeRequest = findAddressChangeRequest;
+
+                    return true;
+                  }
+
+                  return false;
+                }
+              }
+
+              return billToReceive.value === receivedBill.value;
             },
           );
 
@@ -420,20 +568,24 @@ export default class Launcher {
             continue;
           }
 
-          // console.log('Bill To Receive: ', billToReceive);
-          // console.log('IXC Filter Bills To Receive: ', filterReceivedBills);
-          // console.log();
-
           await contaAzulBillsToReceiveDetailsPage.open({
             bill_to_receive_sell_id: billToReceive.sell_id,
           });
 
           if (finance.paid_value !== 0.01) {
+            let interest = Number(
+              (finance.paid_value - finance.value).toFixed(2),
+            );
+
+            if (addressChangeRequest) {
+              interest += addressChangeRequest.unit_value;
+            }
+
             await contaAzulBillsToReceiveDetailsPage.fillData({
               account: 'Sicoob Crediuna',
-              received_date: finance.received_date.toISOString(),
+              received_date: finance.received_date,
               discount: 0,
-              interest: Number((finance.paid_value - finance.value).toFixed(2)),
+              interest,
               paid: finance.paid_value,
               transaction_id: finance.id,
               sell_id: finance.sell_id,
@@ -441,7 +593,7 @@ export default class Launcher {
           } else {
             await contaAzulBillsToReceiveDetailsPage.fillData({
               account: 'Sicoob Crediuna',
-              received_date: finance.received_date.toISOString(),
+              received_date: finance.received_date,
               discount:
                 Number((finance.paid_value - finance.value).toFixed(2)) * -1,
               interest: 0,
@@ -472,120 +624,66 @@ export default class Launcher {
       }
     };
 
-    const launchBrowserAndPages = async (ixcIds: number[]) => {
-      const browser = await this.browserProvider.launch({ headless });
+    const run = async (ixcIds: string[], currentIxcId?: string) => {
+      try {
+        const browser = await this.browserProvider.launch({ headless });
 
-      const page1 = await browser.newPage();
-      const page2 = await browser.newPage();
+        const page1 = await browser.newPage();
+        const page2 = await browser.newPage();
 
-      container.registerInstance<IBrowser<any, any>>('Browser', browser);
+        container.registerInstance<IBrowser<any, any>>('Browser', browser);
 
-      await browser.run(page1, IXCLogInHandler);
-      await browser.run(page2, ContaAzulLogInHandler);
+        await browser.run(page1, IXCLogInHandler);
+        await browser.run(page2, ContaAzulLogInHandler);
 
-      switchPage(page1);
+        switchPage(page1);
 
-      const customersMainIxcPage = new CustomersMainIXCPage();
+        const customersMainIxcPage = new CustomersMainIXCPage();
 
-      await customersMainIxcPage.navigateTo();
+        await customersMainIxcPage.navigateTo();
 
-      for (const ixcId of ixcIds) {
-        console.log();
-        console.log('IXC ID:', ixcId);
+        let startIndex = 0;
 
-        this.cacheProvider.save('last-ixc-id', ixcId);
-
-        try {
-          await runPagesFlow({
-            pages: {
-              ixc: page1,
-              conta_azul: page2,
-            },
-            ixc_id: ixcId,
-          });
-        } catch (err) {
-          if (err instanceof ProcessingContaAzulError) {
-            await browser.close();
-
-            throw err;
-          }
+        if (currentIxcId) {
+          startIndex = ixcIds.findIndex(id => id === currentIxcId) || 0;
         }
 
-        this.cacheProvider.save('last-success-ixc-id', ixcId);
-      }
+        for (let i = startIndex; i < ixcIds.length; i++) {
+          const ixcId = ixcIds[i];
 
-      await browser.close();
-    };
+          console.log();
+          console.log('IXC ID:', ixcId);
 
-    const run = async (startIxcId = 10626) => {
-      // const ixcIds = testingCustomersConfig.map(customer => customer.ixc.id);
-      // const ixcIds = ['12636']; // KARLA ANGELINA
-      // const ixcIds = ['14211']; // GLAROS
-      // const ixcIds = ['10902']; // LUCAS SILVA NERES
-      // const ixcIds = ['10863']; // RAPHAEL
-      // const ixcIds = ['10981']; // Star Brasil Distribuidora de Produtos LTDA
-      // const ixcIds = ['11002']; // Perfilbrás Indústria e Comércio LTDA
-      // const ixcIds = ['10877']; // Ghia Car Auto Portas Ltda
-      // const ixcIds = ['10979']; // William de Moro
-      // const ixcIds = ['10930']; // Luis Otavio Soares de Andrade
-      // const ixcIds = ['11559']; // Thiago de Queiroz
+          this.cacheProvider.save('last-ixc-id', ixcId);
 
-      const ixcIds = [
-        13260,
-        13388,
-        13402,
-        13492,
-        13493,
-        13577,
-        13585,
-        13591,
-        13636,
-        13654,
-        13668,
-        13769,
-        13817,
-        13818,
-        13819,
-        13820,
-        13821,
-        13823,
-        13825,
-        13826,
-        13827,
-        13830,
-        13896,
-        13900,
-        13920,
-        14022,
-        12161,
-        12210,
-        12224,
-        12406,
-        10796,
-        10863,
-        10902,
-        10814,
-        10930,
-        12625,
-        13619,
-        13678,
-        13679,
-      ]; // WITH ERROR
+          try {
+            await runPagesFlow({
+              pages: {
+                ixc: page1,
+                conta_azul: page2,
+              },
+              ixc_id: ixcId,
+            });
+          } catch (err) {
+            if (err instanceof ProcessingContaAzulError) {
+              await browser.close();
 
-      // const ixcIds: number[] = [];
+              throw err;
+            }
+          }
 
-      // for (let i = startIxcId; i < 14430; i++) {
-      //   ixcIds.push(i);
-      // }
+          this.cacheProvider.save('last-success-ixc-id', ixcId);
+        }
 
-      // console.log('IDs:', JSON.stringify(ixcIds));
-
-      try {
-        await launchBrowserAndPages(ixcIds);
+        await browser.close();
       } catch (err) {
-        const ixcId = await this.cacheProvider.recover<number>('last-ixc-id');
+        const ixcId = await this.cacheProvider.recover<string>('last-ixc-id');
 
         const indexOf = ixcIds.findIndex(id => id === ixcId);
+
+        if (ixcIds.length >= indexOf + 1) {
+          return;
+        }
 
         let nextIxcId = ixcIds[indexOf + 1];
 
@@ -623,16 +721,286 @@ export default class Launcher {
 
         await sleep(5000);
 
-        await run(nextIxcId);
+        await run(ixcIds, nextIxcId);
       }
     };
 
-    await run();
+    // const ixcIds = testingCustomersConfig.map(customer => customer.ixc.id);
+    // const ixcIds = ['12636']; // KARLA ANGELINA
+    // const ixcIds = ['14211']; // GLAROS
+    // const ixcIds = ['10902']; // LUCAS SILVA NERES
+    // const ixcIds = ['10863']; // RAPHAEL
+    // const ixcIds = ['10981']; // Star Brasil Distribuidora de Produtos LTDA
+    // const ixcIds = ['11002']; // Perfilbrás Indústria e Comércio LTDA
+    // const ixcIds = ['10877']; // Ghia Car Auto Portas Ltda
+    // const ixcIds = ['10979']; // William de Moro
+    // const ixcIds = ['10930']; // Luis Otavio Soares de Andrade
+    // const ixcIds = ['11559']; // Thiago de Queiroz
+
+    // const ixcIds: string[] = [];
+
+    // for (let i = startIxcId; i < 14430; i++) {
+    //   ixcIds.push(String(i));
+    // }
+
+    // console.log('IDs:', JSON.stringify(ixcIds));
+
+    const ixcIds = [
+      '10863',
+      '10907',
+      '10941',
+      '10949',
+      '10949',
+      '10979',
+      '10981',
+      '11079',
+      '11158',
+      '11212',
+      '11225',
+      '11225',
+      '11262',
+      '11401',
+      '11425',
+      '11558',
+      '11559',
+      '11569',
+      '11582',
+      '11609',
+      '11700',
+      '11719',
+      '11724',
+      '11746',
+      '11776',
+      '11800',
+      '11913',
+      '11981',
+      '11994',
+      '12002',
+      '12040',
+      '12078',
+      '12092',
+      '12104',
+      '12131',
+      '12180',
+      '12196',
+      '12198',
+      '12205',
+      '12208',
+      '12210',
+      '12224',
+      '12230',
+      '12235',
+      '12257',
+      '12374',
+      '12377',
+      '12390',
+      '12392',
+      '12404',
+      '12406',
+      '12417',
+      '12444',
+      '12445',
+      '12459',
+      '12470',
+      '12487',
+      '12508',
+      '12522',
+      '12523',
+      '12529',
+      '12541',
+      '12546',
+      '12572',
+      '12574',
+      '12581',
+      '12582',
+      '12585',
+      '12586',
+      '12588',
+      '12595',
+      '12600',
+      '12606',
+      '12619',
+      '12620',
+      '12630',
+      '12632',
+      '12633',
+      '12635',
+      '12636',
+      '12639',
+      '12641',
+      '12648',
+      '12650',
+      '12661',
+      '12663',
+      '12670',
+      '12671',
+      '12672',
+      '12675',
+      '12688',
+      '12692',
+      '12714',
+      '12717',
+      '12720',
+      '12724',
+      '12736',
+      '12737',
+      '12752',
+      '12757',
+      '12767',
+      '12769',
+      '12776',
+      '12782',
+      '12783',
+      '12791',
+      '12797',
+      '12832',
+      '12835',
+      '12839',
+      '12848',
+      '12870',
+      '12876',
+      '12877',
+      '12885',
+      '12889',
+      '12889',
+      '12893',
+      '12894',
+      '12905',
+      '12921',
+      '12929',
+      '12949',
+      '12952',
+      '12971',
+      '12973',
+      '13002',
+      '13009',
+      '13016',
+      '13034',
+      '13037',
+      '13038',
+      '13050',
+      '13055',
+      '13063',
+      '13069',
+      '13097',
+      '13099',
+      '13112',
+      '13114',
+      '13140',
+      '13142',
+      '13147',
+      '13148',
+      '13171',
+      '13176',
+      '13184',
+      '13193',
+      '13200',
+      '13201',
+      '13213',
+      '13222',
+      '13224',
+      '13229',
+      '13235',
+      '13237',
+      '13246',
+      '13260',
+      '13283',
+      '13291',
+      '13298',
+      '13308',
+      '13318',
+      '13343',
+      '13357',
+      '13370',
+      '13384',
+      '13385',
+      '13388',
+      '13389',
+      '13393',
+      '13397',
+      '13403',
+      '13412',
+      '13414',
+      '13417',
+      '13420',
+      '13429',
+      '13434',
+      '13449',
+      '13453',
+      '13461',
+      '13462',
+      '13488',
+      '13489',
+      '13490',
+      '13491',
+      '13493',
+      '13494',
+      '13525',
+      '13528',
+      '13530',
+      '13534',
+      '13575',
+      '13576',
+      '13577',
+      '13585',
+      '13600',
+      '13627',
+      '13635',
+      '13636',
+      '13654',
+      '13657',
+      '13665',
+      '13667',
+      '13668',
+      '13669',
+      '13670',
+      '13678',
+      '13679',
+      '13681',
+      '13684',
+      '13689',
+      '13722',
+      '13737',
+      '13751',
+      '13769',
+      '13794',
+      '13813',
+      '13817',
+      '13818',
+      '13819',
+      '13819',
+      '13820',
+      '13823',
+      '13825',
+      '13826',
+      '13827',
+      '13830',
+      '13835',
+      '13843',
+      '13845',
+      '13854',
+      '13863',
+      '13872',
+      '13876',
+      '13896',
+      '13896',
+      '13896',
+      '13900',
+      '13945',
+      '13961',
+      '13995',
+      '14019',
+      '14021',
+      '14081',
+    ];
+
+    await run(ixcIds);
 
     timer.stop();
 
     const formattedTimer = timer.format();
 
+    console.log(ixcRealIds);
     console.log(`\nElapsed time: ${formattedTimer}`);
   }
 }

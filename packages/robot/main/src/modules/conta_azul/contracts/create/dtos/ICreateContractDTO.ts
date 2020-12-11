@@ -4,8 +4,8 @@ export default interface ICreateContractDTO {
   name: string;
   document: string;
   category: string;
-  sell_date: string;
+  sell_date: Date;
   always_charge_on_day: number;
   products: IContractProductItemContaAzul[];
-  ixc_contract_id;
+  description: string;
 }

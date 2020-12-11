@@ -1,4 +1,4 @@
-import IExtendedCustomerIXC from '@shared/models/IExtendedCustomerIXC';
+import IExtendedCustomerIXC from '@shared/models/ixc/IExtendedCustomerIXC';
 
 export default class ProcessingContaAzulError {
   public readonly ixc: IExtendedCustomerIXC;

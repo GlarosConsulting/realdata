@@ -1,4 +1,4 @@
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { injectable, inject } from 'tsyringe';
 
 import AppError from '@robot/shared/errors/AppError';
@@ -13,10 +13,10 @@ interface IRequest {
   name: string;
   document: string;
   category: string;
-  sell_date: string;
+  sell_date: Date;
   always_charge_on_day: number;
   products: IContractProductItemContaAzul[];
-  ixc_contract_id: string;
+  description: string;
 }
 
 @injectable()
@@ -34,13 +34,13 @@ export default class FillCreateContractDataService {
       sell_date,
       always_charge_on_day: original_always_charge_on_day,
       products,
-      ixc_contract_id,
+      description,
     }: IRequest,
     dontSave = true,
   ): Promise<void> {
     let always_charge_on_day = original_always_charge_on_day;
 
-    if (always_charge_on_day) {
+    if (always_charge_on_day >= 29) {
       always_charge_on_day = 29;
     }
 
@@ -110,7 +110,7 @@ export default class FillCreateContractDataService {
 
     await this.page.typeToElement(
       findSellDateInputElement,
-      format(parseISO(sell_date), 'dd/MM/yyyy'),
+      format(sell_date, 'dd/MM/yyyy'),
     );
 
     await this.page.select(
@@ -198,10 +198,7 @@ export default class FillCreateContractDataService {
       findDescriptionTextareaElement,
     ] = await this.page.findElementsBySelector('#negotiationNote');
 
-    await this.page.typeToElement(
-      findDescriptionTextareaElement,
-      `ID Contrato IXC: ${ixc_contract_id}`,
-    );
+    await this.page.typeToElement(findDescriptionTextareaElement, description);
 
     await sleep(1000);
 

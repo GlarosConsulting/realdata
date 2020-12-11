@@ -1,9 +1,10 @@
 import IAddressIXC from '@modules/ixc/customers/details/address/models/IAddressIXC';
 import IContactIXC from '@modules/ixc/customers/details/contact/models/IContactIXC';
-import IContractIXC from '@modules/ixc/customers/details/contract/models/IContractIXC';
 import IFinanceIXC from '@modules/ixc/customers/details/finance/models/IFinanceIXC';
 import IMainDetailsIXC from '@modules/ixc/customers/details/main/models/IMainDetailsIXC';
 import ICustomerIXC from '@modules/ixc/customers/main/models/ICustomerIXC';
+
+import IExtendedContractIXC from './IExtendedContractIXC';
 
 export default interface IExtendedCustomerIXC extends ICustomerIXC {
   details: {
@@ -11,6 +12,6 @@ export default interface IExtendedCustomerIXC extends ICustomerIXC {
     address: IAddressIXC;
     contact: IContactIXC;
     finances: IFinanceIXC[];
-    contracts: IContractIXC[];
+    contracts: IExtendedContractIXC[];
   };
 }

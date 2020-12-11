@@ -35,9 +35,9 @@ export default class ExtractContractDetailsService {
 
     const pageUrl = await this.page.driver.url();
 
-    const splittedPageUrl = pageUrl.split('/');
+    const splitPageUrl = pageUrl.split('/');
 
-    const id = splittedPageUrl[splittedPageUrl.length - 1];
+    const id = splitPageUrl[splitPageUrl.length - 1];
 
     /* istanbul ignore next */
     const extractedContractDetails = await this.page.evaluate<

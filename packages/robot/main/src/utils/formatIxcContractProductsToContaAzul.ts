@@ -1,5 +1,5 @@
 import IContractProductItemContaAzul from '@modules/conta_azul/contracts/create/models/IContractProductItemContaAzul';
-import { IContractProductItem } from '@modules/ixc/customers/details/contract/models/IContractProducts';
+import { IContractProductItem } from '@modules/ixc/customers/details/contract/details/products/models/IContractProducts';
 
 interface IFilterIXC {
   column: string;

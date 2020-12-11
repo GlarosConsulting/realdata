@@ -37,6 +37,7 @@
     "camelcase": "off",
     "semi": "off",
     "comma-dangle": "off",
+    "max-len": "off",
     "function-paren-newline": "off",
     "class-methods-use-this": "off",
     "space-before-function-paren": "off",

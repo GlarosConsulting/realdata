@@ -2,9 +2,9 @@ export default interface IFinanceIXC {
   id: string;
   status: string;
   charge: number;
-  contract_r: number;
+  contract_r: string;
   installment_r: number;
-  contract_a: number;
+  contract_a: string;
   sell_id: string;
   emission_date: Date;
   due_date: Date;

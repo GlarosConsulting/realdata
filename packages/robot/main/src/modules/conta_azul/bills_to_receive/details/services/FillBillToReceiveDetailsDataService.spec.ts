@@ -69,8 +69,6 @@ describe('FillBillToReceiveDetailsData', () => {
       value: testingCustomer.name,
     });
 
-    console.log(billsToReceiveByField);
-
     await openBillToReceiveDetails.execute({
       bill_to_receive_sell_id: billsToReceiveByField[0].sell_id,
     });
@@ -82,6 +80,7 @@ describe('FillBillToReceiveDetailsData', () => {
       received_date: testingFinance.received_date,
       discount: 0,
       interest: testingFinance.paid_value - testingFinance.value,
+      value: 200.66,
       paid: testingFinance.paid_value,
       transaction_id: testingFinance.id,
       sell_id: testingFinance.sell_id,
