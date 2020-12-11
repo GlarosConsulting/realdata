@@ -992,6 +992,8 @@ export default class Launcher {
       '14019',
       '14021',
       '14081',
+      '13900',
+      '13260',
     ];
 
     await run(ixcIds);
