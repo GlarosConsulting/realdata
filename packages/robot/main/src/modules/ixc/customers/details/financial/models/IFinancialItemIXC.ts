@@ -1,4 +1,4 @@
-export default interface IFinanceIXC {
+export default interface IFinancialItemIXC {
   id: string;
   status: string;
   charge: number;
@@ -16,4 +16,5 @@ export default interface IFinanceIXC {
   credit_date: Date;
   received_date: Date;
   type: string;
+  cancellation_reason: string;
 }

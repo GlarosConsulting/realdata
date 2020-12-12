@@ -11,8 +11,8 @@ import NavigateToCustomersPageService from '@modules/ixc/customers/main/services
 import AuthenticateUserService from '@modules/ixc/login/services/AuthenticateUserService';
 import NavigateToLogInPageService from '@modules/ixc/login/services/NavigateToLogInPageService';
 
-import ExtractFinanceListService from './ExtractFinanceListService';
-import NavigateToFinanceTabService from './NavigateToFinanceTabService';
+import ExtractFinancialListService from './ExtractFinancialListService';
+import NavigateToFinancialTabService from './NavigateToFinancialTabService';
 
 let puppeteerBrowserProvider: PuppeteerBrowserProvider;
 let navigateToLogInPage: NavigateToLogInPageService;
@@ -20,13 +20,13 @@ let authenticateUser: AuthenticateUserService;
 let navigateToCustomersPage: NavigateToCustomersPageService;
 let findCustomerByField: FindCustomerByFieldService;
 let openCustomerDetails: OpenCustomerDetailsService;
-let navigateToFinanceTab: NavigateToFinanceTabService;
-let extractFinanceList: ExtractFinanceListService;
+let navigateToFinancialTab: NavigateToFinancialTabService;
+let extractFinancialList: ExtractFinancialListService;
 
 let browser: Browser;
 let page: Page;
 
-describe('ExtractFinanceList', () => {
+describe('ExtractFinancialList', () => {
   beforeAll(async () => {
     puppeteerBrowserProvider = new PuppeteerBrowserProvider();
 
@@ -41,15 +41,15 @@ describe('ExtractFinanceList', () => {
     navigateToCustomersPage = new NavigateToCustomersPageService(page);
     findCustomerByField = new FindCustomerByFieldService(page);
     openCustomerDetails = new OpenCustomerDetailsService(page);
-    navigateToFinanceTab = new NavigateToFinanceTabService(page);
-    extractFinanceList = new ExtractFinanceListService(page);
+    navigateToFinancialTab = new NavigateToFinancialTabService(page);
+    extractFinancialList = new ExtractFinancialListService(page);
   });
 
   afterAll(async () => {
     // await browser.close();
   });
 
-  it('should be able to extract finance list', async () => {
+  it('should be able to extract financial list', async () => {
     await navigateToLogInPage.execute();
 
     const { email, password } = ixcConfig.testing.account;
@@ -70,19 +70,19 @@ describe('ExtractFinanceList', () => {
 
     await openCustomerDetails.execute({ customer_id: customer.id });
 
-    await navigateToFinanceTab.execute();
+    await navigateToFinancialTab.execute();
 
-    const finances = await extractFinanceList.execute();
+    const financial = await extractFinancialList.execute();
 
-    expect(finances).toEqual(
+    expect(financial).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           id: expect.any(String),
           status: expect.any(String),
           charge: expect.any(Number),
-          contract_r: expect.any(Number),
+          contract_r: expect.any(String),
           installment_r: expect.any(Number),
-          contract_a: expect.any(Number),
+          contract_a: expect.any(String),
           sell_id: expect.any(String),
           emission_date: expect.any(Date),
           due_date: expect.any(Date),
@@ -91,6 +91,7 @@ describe('ExtractFinanceList', () => {
           open_value: expect.any(Number),
           paid_value: expect.any(Number),
           type: expect.any(String),
+          cancellation_reason: expect.any(String),
         }),
       ]),
     );

@@ -1,7 +1,7 @@
 import IRobotPage from '@shared/puppeteer/pages/IRobotPage';
 
-import IFinanceIXC from '@modules/ixc/customers/details/finance/models/IFinanceIXC';
+import IFinancialItemIXC from '@modules/ixc/customers/details/financial/models/IFinancialItemIXC';
 
 export default interface ICustomersDetailsFinanceIXCPage extends IRobotPage {
-  getAll(): Promise<IFinanceIXC[]>;
+  getAll(): Promise<IFinancialItemIXC[]>;
 }

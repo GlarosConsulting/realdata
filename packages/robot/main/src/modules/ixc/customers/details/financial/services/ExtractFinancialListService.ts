@@ -6,11 +6,11 @@ import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 
 import parseDate from '@utils/parseDate';
 
-import IFinanceIXC from '@modules/ixc/customers/details/finance/models/IFinanceIXC';
+import IFinancialItemIXC from '@modules/ixc/customers/details/financial/models/IFinancialItemIXC';
 
-interface IExtractFinance
+export interface IExtractFinancialIXC
   extends Omit<
-    IFinanceIXC,
+    IFinancialItemIXC,
     | 'emission_date'
     | 'due_date'
     | 'payment_date'
@@ -25,13 +25,13 @@ interface IExtractFinance
 }
 
 @injectable()
-export default class ExtractFinanceListService {
+export default class ExtractFinancialListService {
   constructor(
     @inject('Page')
     private page: Page,
   ) {}
 
-  public async execute(): Promise<IFinanceIXC[]> {
+  public async execute(): Promise<IFinancialItemIXC[]> {
     const [
       findCustomersWindowTitleElement,
     ] = await this.page.findElementsByText('Cliente', 'div[@class="ftitle"]');
@@ -51,9 +51,9 @@ export default class ExtractFinanceListService {
     await injectFunctions(this.page);
 
     /* istanbul ignore next */
-    const extractedFinances = await this.page.evaluate<IExtractFinance[]>(
+    const extractedFinancial = await this.page.evaluate<IExtractFinancialIXC[]>(
       () => {
-        const data: IExtractFinance[] = [];
+        const data: IExtractFinancialIXC[] = [];
 
         const tableRows = document.querySelectorAll(
           'table#cliente_cliente_contrato_rel_areceber tbody tr',
@@ -122,10 +122,14 @@ export default class ExtractFinanceListService {
             'td[abbr="fn_areceber.tipo_recebimento"] > div',
             row,
           );
+          const cancellation_reason = getTextBySelector(
+            'td:nth-child(20) > div',
+            row,
+          );
 
           console.log(status);
 
-          const finance: IExtractFinance = {
+          const financial: IExtractFinancialIXC = {
             id,
             status,
             charge: Number(charge),
@@ -143,24 +147,25 @@ export default class ExtractFinanceListService {
             credit_date,
             received_date,
             type,
+            cancellation_reason,
           };
 
-          data.push(finance);
+          data.push(financial);
         });
 
         return data;
       },
     );
 
-    const finances = extractedFinances.map<IFinanceIXC>(finance => ({
-      ...finance,
-      emission_date: parseDate(finance.emission_date),
-      due_date: parseDate(finance.due_date),
-      payment_date: parseDate(finance.payment_date),
-      credit_date: parseDate(finance.credit_date),
-      received_date: parseDate(finance.received_date, 'dd/MM/yyyy HH:mm:ss'),
+    const financial = extractedFinancial.map<IFinancialItemIXC>(item => ({
+      ...item,
+      emission_date: parseDate(item.emission_date),
+      due_date: parseDate(item.due_date),
+      payment_date: parseDate(item.payment_date),
+      credit_date: parseDate(item.credit_date),
+      received_date: parseDate(item.received_date, 'dd/MM/yyyy HH:mm:ss'),
     }));
 
-    return finances;
+    return financial;
   }
 }

@@ -3,14 +3,18 @@ import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 import PuppeteerBrowserProvider from '@robot/shared/modules/browser/providers/BrowserProvider/implementations/PuppeteerBrowserProvider';
 
 import ixcConfig from '@config/ixc';
+import testingCustomersConfig from '@config/testing_customers';
 
+import OpenContractDetailsService from '@modules/ixc/customers/details/contract/details/main/services/OpenContractDetailsService';
+import ExtractContractListService from '@modules/ixc/customers/details/contract/main/services/ExtractContractListService';
+import NavigateToContractTabService from '@modules/ixc/customers/details/contract/main/services/NavigateToContractTabService';
 import OpenCustomerDetailsService from '@modules/ixc/customers/details/main/services/OpenCustomerDetailsService';
 import FindCustomerByFieldService from '@modules/ixc/customers/main/services/FindCustomerByFieldService';
 import NavigateToCustomersPageService from '@modules/ixc/customers/main/services/NavigateToCustomersPageService';
 import AuthenticateUserService from '@modules/ixc/login/services/AuthenticateUserService';
 import NavigateToLogInPageService from '@modules/ixc/login/services/NavigateToLogInPageService';
 
-import NavigateToFinanceTabService from './NavigateToFinanceTabService';
+import NavigateToFinancialTabService from './NavigateToFinancialTabService';
 
 let puppeteerBrowserProvider: PuppeteerBrowserProvider;
 let navigateToLogInPage: NavigateToLogInPageService;
@@ -18,16 +22,19 @@ let authenticateUser: AuthenticateUserService;
 let navigateToCustomersPage: NavigateToCustomersPageService;
 let findCustomerByField: FindCustomerByFieldService;
 let openCustomerDetails: OpenCustomerDetailsService;
-let navigateToFinanceTab: NavigateToFinanceTabService;
+let navigateToContractTab: NavigateToContractTabService;
+let extractContractList: ExtractContractListService;
+let openContractDetails: OpenContractDetailsService;
+let navigateToFinancialTab: NavigateToFinancialTabService;
 
 let browser: Browser;
 let page: Page;
 
-describe('NavigateToFinanceTab', () => {
+describe('NavigateToFinancialTab', () => {
   beforeAll(async () => {
     puppeteerBrowserProvider = new PuppeteerBrowserProvider();
 
-    browser = await puppeteerBrowserProvider.launch();
+    browser = await puppeteerBrowserProvider.launch({ headless: false });
   });
 
   beforeEach(async () => {
@@ -38,14 +45,17 @@ describe('NavigateToFinanceTab', () => {
     navigateToCustomersPage = new NavigateToCustomersPageService(page);
     findCustomerByField = new FindCustomerByFieldService(page);
     openCustomerDetails = new OpenCustomerDetailsService(page);
-    navigateToFinanceTab = new NavigateToFinanceTabService(page);
+    navigateToContractTab = new NavigateToContractTabService(page);
+    extractContractList = new ExtractContractListService(page);
+    openContractDetails = new OpenContractDetailsService(page);
+    navigateToFinancialTab = new NavigateToFinancialTabService(page);
   });
 
   afterAll(async () => {
-    await browser.close();
+    // await browser.close();
   });
 
-  it('should be able to navigate to finance tab', async () => {
+  it('should be able to navigate to financial tab', async () => {
     await navigateToLogInPage.execute();
 
     const { email, password } = ixcConfig.testing.account;
@@ -57,15 +67,21 @@ describe('NavigateToFinanceTab', () => {
 
     await navigateToCustomersPage.execute();
 
-    const testingCustomerData = ixcConfig.testing.customers[0];
+    const testingCustomerData = testingCustomersConfig[6];
 
     const customer = await findCustomerByField.execute({
       field: 'id',
-      value: testingCustomerData.id,
+      value: testingCustomerData.ixc.id,
     });
 
     await openCustomerDetails.execute({ customer_id: customer.id });
 
-    await navigateToFinanceTab.execute();
+    await navigateToContractTab.execute();
+
+    const [contract] = await extractContractList.execute();
+
+    await openContractDetails.execute({ contract });
+
+    await navigateToFinancialTab.execute();
   });
 });

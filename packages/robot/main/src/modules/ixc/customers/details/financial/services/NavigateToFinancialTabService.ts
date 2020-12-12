@@ -6,7 +6,7 @@ import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 import sleep from '@utils/sleep';
 
 @injectable()
-export default class NavigateToFinanceTabService {
+export default class NavigateToFinancialTabService {
   constructor(
     @inject('Page')
     private page: Page,
