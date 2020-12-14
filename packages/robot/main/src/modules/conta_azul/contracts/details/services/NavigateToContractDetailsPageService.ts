@@ -80,8 +80,6 @@ export default class NavigateToContractDetailsPageService {
           },
         );
 
-        console.log(findElement);
-
         if (findElement) {
           findElement.click();
         }

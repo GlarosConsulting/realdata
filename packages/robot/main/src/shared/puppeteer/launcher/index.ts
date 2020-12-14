@@ -751,7 +751,7 @@ export default class Launcher {
 
     // const ixcIds = testingCustomersConfig.map(customer => customer.ixc.id);
     // const ixcIds = ['12636']; // KARLA ANGELINA
-    // const ixcIds = ['14211']; // GLAROS
+    const ixcIds = ['14211']; // GLAROS
     // const ixcIds = ['10902']; // LUCAS SILVA NERES
     // const ixcIds = ['10863']; // RAPHAEL
     // const ixcIds = ['10981']; // Star Brasil Distribuidora de Produtos LTDA
@@ -1019,8 +1019,6 @@ export default class Launcher {
     //   '13900',
     //   '13260',
     // ];
-
-    const ixcIds = ['14344'];
 
     await run(ixcIds);
 

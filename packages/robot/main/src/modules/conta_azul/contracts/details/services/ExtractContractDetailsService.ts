@@ -24,12 +24,12 @@ export default class ExtractContractDetailsService {
 
   public async execute(): Promise<IContractDetailsContaAzul> {
     const [
-      findCreateContractButtonElement,
+      findContractDetailsPageIdentifierElement,
     ] = await this.page.findElementsBySelector(
       '#conteudo > div:nth-child(1) > div:nth-child(2) > button',
     );
 
-    if (!findCreateContractButtonElement) {
+    if (!findContractDetailsPageIdentifierElement) {
       throw new AppError('You should be in contract details page.');
     }
 
