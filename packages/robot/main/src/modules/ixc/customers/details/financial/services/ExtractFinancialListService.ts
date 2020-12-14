@@ -8,6 +8,9 @@ import parseDate from '@utils/parseDate';
 
 import IFinancialItemIXC from '@modules/ixc/customers/details/financial/models/IFinancialItemIXC';
 
+import ExtractListInfoService from './ExtractListInfoService';
+import NavigateBetweenListPagesService from './NavigateBetweenListPagesService';
+
 export interface IExtractFinancialIXC
   extends Omit<
     IFinancialItemIXC,
@@ -26,10 +29,17 @@ export interface IExtractFinancialIXC
 
 @injectable()
 export default class ExtractFinancialListService {
+  private extractListInfo: ExtractListInfoService;
+
+  private navigateBetweenListPages: NavigateBetweenListPagesService;
+
   constructor(
     @inject('Page')
     private page: Page,
-  ) {}
+  ) {
+    this.extractListInfo = new ExtractListInfoService(page);
+    this.navigateBetweenListPages = new NavigateBetweenListPagesService(page);
+  }
 
   public async execute(): Promise<IFinancialItemIXC[]> {
     const [
@@ -37,7 +47,9 @@ export default class ExtractFinancialListService {
     ] = await this.page.findElementsByText('Cliente', 'div[@class="ftitle"]');
 
     if (!findCustomersWindowTitleElement) {
-      throw new AppError('You should be with the customers window opened.');
+      throw new AppError(
+        'You should be with the customers window opened in financial tab.',
+      );
     }
 
     const [findTableBodyElement] = await this.page.findElementsBySelector(
@@ -50,9 +62,15 @@ export default class ExtractFinancialListService {
 
     await injectFunctions(this.page);
 
-    /* istanbul ignore next */
-    const extractedFinancial = await this.page.evaluate<IExtractFinancialIXC[]>(
-      () => {
+    const extractedFinancial: IExtractFinancialIXC[] = [];
+
+    let listInfo = await this.extractListInfo.execute();
+
+    for (let i = listInfo.pages.current; i <= listInfo.pages.total; i++) {
+      /* istanbul ignore next */
+      const newExtractedFinancial = await this.page.evaluate<
+        IExtractFinancialIXC[]
+      >(() => {
         const data: IExtractFinancialIXC[] = [];
 
         const tableRows = document.querySelectorAll(
@@ -154,8 +172,16 @@ export default class ExtractFinancialListService {
         });
 
         return data;
-      },
-    );
+      });
+
+      extractedFinancial.push(...newExtractedFinancial);
+
+      if (i < listInfo.pages.total) {
+        await this.navigateBetweenListPages.execute({ to: 'next' });
+
+        listInfo = await this.extractListInfo.execute();
+      }
+    }
 
     const financial = extractedFinancial.map<IFinancialItemIXC>(item => ({
       ...item,

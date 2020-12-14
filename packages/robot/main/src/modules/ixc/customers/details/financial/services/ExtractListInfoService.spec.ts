@@ -11,6 +11,7 @@ import NavigateToCustomersPageService from '@modules/ixc/customers/main/services
 import AuthenticateUserService from '@modules/ixc/login/services/AuthenticateUserService';
 import NavigateToLogInPageService from '@modules/ixc/login/services/NavigateToLogInPageService';
 
+import ExtractListInfoService from './ExtractListInfoService';
 import NavigateToFinancialTabService from './NavigateToFinancialTabService';
 
 let puppeteerBrowserProvider: PuppeteerBrowserProvider;
@@ -20,11 +21,12 @@ let navigateToCustomersPage: NavigateToCustomersPageService;
 let findCustomerByField: FindCustomerByFieldService;
 let openCustomerDetails: OpenCustomerDetailsService;
 let navigateToFinancialTab: NavigateToFinancialTabService;
+let extractListInfo: ExtractListInfoService;
 
 let browser: Browser;
 let page: Page;
 
-describe('NavigateToFinancialTab', () => {
+describe('ExtractListInfo', () => {
   beforeAll(async () => {
     puppeteerBrowserProvider = new PuppeteerBrowserProvider();
 
@@ -40,13 +42,14 @@ describe('NavigateToFinancialTab', () => {
     findCustomerByField = new FindCustomerByFieldService(page);
     openCustomerDetails = new OpenCustomerDetailsService(page);
     navigateToFinancialTab = new NavigateToFinancialTabService(page);
+    extractListInfo = new ExtractListInfoService(page);
   });
 
   afterAll(async () => {
     // await browser.close();
   });
 
-  it('should be able to navigate to financial tab', async () => {
+  it('should be able to extract list info', async () => {
     await navigateToLogInPage.execute();
 
     const { email, password } = ixcConfig.testing.account;
@@ -58,15 +61,24 @@ describe('NavigateToFinancialTab', () => {
 
     await navigateToCustomersPage.execute();
 
-    const testingCustomer = testingCustomersConfig[0];
+    const testingCustomerData = testingCustomersConfig[0];
 
     const customer = await findCustomerByField.execute({
       field: 'id',
-      value: testingCustomer.ixc.id,
+      value: testingCustomerData.ixc.id,
     });
 
     await openCustomerDetails.execute({ customer_id: customer.id });
 
     await navigateToFinancialTab.execute();
+
+    const listInfo = await extractListInfo.execute();
+
+    expect(listInfo).toEqual({
+      pages: {
+        current: expect.any(Number),
+        total: expect.any(Number),
+      },
+    });
   });
 });

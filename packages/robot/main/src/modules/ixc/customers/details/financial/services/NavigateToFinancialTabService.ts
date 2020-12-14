@@ -21,7 +21,7 @@ export default class NavigateToFinancialTabService {
 
     if (!findCustomersWindowTitleElement) {
       throw new AppError(
-        'You should be with the customer details window opened.',
+        'You should be with the customers window opened in financial tab.',
       );
     }
 
@@ -38,5 +38,15 @@ export default class NavigateToFinancialTabService {
     await this.page.driver.waitForSelector(
       'div.panel.mostrando > dl > div > div > div.hDiv > div > table > thead > tr > th.sorted > div',
     );
+
+    const [
+      findShowCanceledCheckboxElement,
+    ] = await this.page.findElementsBySelector(
+      'div.panel.mostrando > dl > div > div > div.tDiv.bg2 > div.tDiv2 > span:nth-child(6) > input[type=checkbox]',
+    );
+
+    await findShowCanceledCheckboxElement.click();
+
+    await sleep(1000);
   }
 }
