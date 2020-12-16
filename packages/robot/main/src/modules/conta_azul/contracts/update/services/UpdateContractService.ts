@@ -128,6 +128,14 @@ export default class UpdateContractService {
     }
 
     if (description) {
+      /* istanbul ignore next */
+      await this.page.evaluate(() => {
+        document.querySelector<HTMLTextAreaElement>('#negotiationNote').value =
+          '';
+      });
+
+      await sleep(500);
+
       const [
         findDescriptionTextareaElement,
       ] = await this.page.findElementsBySelector('#negotiationNote');

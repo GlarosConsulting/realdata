@@ -1,25 +1,27 @@
 import { container } from 'tsyringe';
 
-import IContractProducts from '@modules/ixc/customers/details/contract/details/products/models/IContractProducts';
-import ICustomersDetailsContractDetailsProductsIXCPage from '@modules/ixc/customers/details/contract/details/products/pages/ICustomersDetailsContractDetailsProductsIXCPage';
-import ExtractProductDataService from '@modules/ixc/customers/details/contract/details/products/services/ExtractProductDataService';
-import NavigateToProductTabService from '@modules/ixc/customers/details/contract/details/products/services/NavigateToProductTabService';
+import ISaleProductItem from '@modules/ixc/customers/details/sales/details/products/models/ISaleProductItem';
+import ICustomersDetailsSalesDetailsProductsIXCPage from '@modules/ixc/customers/details/sales/details/products/pages/ICustomersDetailsSalesDetailsProductsIXCPage';
+import ExtractProductsListService from '@modules/ixc/customers/details/sales/details/products/services/ExtractProductsListService';
+import NavigateToProductsTabService from '@modules/ixc/customers/details/sales/details/products/services/NavigateToProductsTabService';
 
-class CustomersDetailsContractDetailsProductsIXCPage
-  implements ICustomersDetailsContractDetailsProductsIXCPage {
+class CustomersDetailsSalesDetailsProductsIXCPage
+  implements ICustomersDetailsSalesDetailsProductsIXCPage {
   public async navigateTo(): Promise<void> {
-    const navigateToProductTab = container.resolve(NavigateToProductTabService);
+    const navigateToProductsTab = container.resolve(
+      NavigateToProductsTabService,
+    );
 
-    await navigateToProductTab.execute();
+    await navigateToProductsTab.execute();
   }
 
-  public async getData(): Promise<IContractProducts> {
-    const extractProductData = container.resolve(ExtractProductDataService);
+  public async getAll(): Promise<ISaleProductItem[]> {
+    const extractProductsList = container.resolve(ExtractProductsListService);
 
-    const productData = await extractProductData.execute();
+    const products = await extractProductsList.execute();
 
-    return productData;
+    return products;
   }
 }
 
-export default CustomersDetailsContractDetailsProductsIXCPage;
+export default CustomersDetailsSalesDetailsProductsIXCPage;

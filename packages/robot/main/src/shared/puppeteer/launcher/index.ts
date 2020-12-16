@@ -6,7 +6,6 @@ import {
   isAfter,
   isBefore,
   isSameMonth,
-  isEqual as isDateEqual,
 } from 'date-fns';
 import { container, injectable, inject } from 'tsyringe';
 
@@ -46,6 +45,7 @@ import CustomersDetailsContractDetailsMainIXCPage from '@modules/ixc/customers/d
 import CustomersDetailsContractDetailsProductsIXCPage from '@modules/ixc/customers/details/contract/details/products/infra/puppeteer/pages/CustomersDetailsContractDetailsProductsIXCPage';
 import CustomersDetailsContractMainIXCPage from '@modules/ixc/customers/details/contract/main/infra/puppeteer/pages/CustomersDetailsContractMainIXCPage';
 import CustomersDetailsFinanceIXCPage from '@modules/ixc/customers/details/financial/infra/puppeteer/pages/CustomersDetailsFinanceIXCPage';
+import IFinancialItemIXC from '@modules/ixc/customers/details/financial/models/IFinancialItemIXC';
 import CustomersDetailsMainIXCPage from '@modules/ixc/customers/details/main/infra/puppeteer/pages/CustomersDetailsMainIXCPage';
 import CustomersMainIXCPage from '@modules/ixc/customers/main/infra/puppeteer/pages/CustomersMainIXCPage';
 import IXCLogInHandler from '@modules/ixc/login/infra/handlers';
@@ -418,6 +418,13 @@ export default class Launcher {
                   date: sell_date + 1,
                 });
 
+                if (
+                  contaAzulContract.details.start_date.getDate() !==
+                  start_date.getDate()
+                ) {
+                  return false;
+                }
+
                 const checkContainsEveryProduct = contaAzulContract.details.products.every(
                   contaAzulProduct =>
                     contractProducts.some(
@@ -425,15 +432,37 @@ export default class Launcher {
                     ),
                 );
 
-                return (
+                if (
                   contaAzulContract.monthly_value ===
                     ixcContract.details.products.gross_value &&
-                  isDateEqual(
-                    contaAzulContract.details.start_date,
-                    start_date,
-                  ) &&
                   checkContainsEveryProduct
+                ) {
+                  return true;
+                }
+
+                const filterCanceledFinancial = ixcContract.details.financial.filter(
+                  item =>
+                    item.status.includes('Cancelado') &&
+                    (item.cancellation_reason.includes('Downgrade') ||
+                      item.cancellation_reason.includes('Upgrade')),
                 );
+
+                let lastCanceledFinancial: IFinancialItemIXC;
+
+                if (filterCanceledFinancial.length > 0) {
+                  lastCanceledFinancial =
+                    filterCanceledFinancial[filterCanceledFinancial.length - 1];
+                }
+
+                if (
+                  lastCanceledFinancial &&
+                  contaAzulContract.monthly_value ===
+                    lastCanceledFinancial.value
+                ) {
+                  return true;
+                }
+
+                return false;
               },
             );
 
@@ -464,6 +493,43 @@ export default class Launcher {
           for (const linkedContract of linkedContracts) {
             if (!linkedContract.conta_azul) {
               await createContract(linkedContract.ixc);
+
+              const checkHasCanceledFinancial = linkedContract.ixc.details.financial.some(
+                item =>
+                  item.status.includes('Cancelado') &&
+                  (item.cancellation_reason.includes('Downgrade') ||
+                    item.cancellation_reason.includes('Upgrade')),
+              );
+
+              if (checkHasCanceledFinancial) {
+                try {
+                  await api.post('/logs', {
+                    date: new Date(),
+                    ixc_id: `${extendedCustomerIxc.id} - ${extendedCustomerIxc.name}`,
+                    projection_id: 'TODO',
+                    conta_azul_existing: true,
+                    discharge_performed: false,
+                  });
+                } catch {
+                  // ignore catch block
+                }
+              }
+            } else if (
+              linkedContract.ixc.details.products.gross_value !==
+              linkedContract.conta_azul?.monthly_value
+            ) {
+              const contractProducts = formatIxcContractProductsToContaAzul(
+                linkedContract.ixc.details.products.items,
+              );
+
+              await contaAzulContractsUpdatePage.navigateTo(
+                linkedContract.conta_azul.details.id,
+              );
+
+              await contaAzulContractsUpdatePage.update({
+                products: contractProducts,
+                description: `ID Contrato IXC: ${linkedContract.ixc.id}`,
+              });
             } else if (!linkedContract.conta_azul?.details.description) {
               await contaAzulContractsUpdatePage.navigateTo(
                 linkedContract.conta_azul.details.id,
@@ -751,7 +817,7 @@ export default class Launcher {
 
     // const ixcIds = testingCustomersConfig.map(customer => customer.ixc.id);
     // const ixcIds = ['12636']; // KARLA ANGELINA
-    const ixcIds = ['14211']; // GLAROS
+    // const ixcIds = ['14211']; // GLAROS
     // const ixcIds = ['10902']; // LUCAS SILVA NERES
     // const ixcIds = ['10863']; // RAPHAEL
     // const ixcIds = ['10981']; // Star Brasil Distribuidora de Produtos LTDA
@@ -760,6 +826,7 @@ export default class Launcher {
     // const ixcIds = ['10979']; // William de Moro
     // const ixcIds = ['10930']; // Luis Otavio Soares de Andrade
     // const ixcIds = ['11559']; // Thiago de Queiroz
+    const ixcIds = ['10941']; // Dayane Mendes da Silva Nascimento
 
     // const ixcIds: string[] = [];
 

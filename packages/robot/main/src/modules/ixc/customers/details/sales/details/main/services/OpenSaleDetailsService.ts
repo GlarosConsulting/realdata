@@ -5,20 +5,20 @@ import Page from '@robot/shared/modules/browser/infra/puppeteer/models/Page';
 
 import sleep from '@utils/sleep';
 
-import IContractIXC from '@modules/ixc/customers/details/contract/main/models/IContractIXC';
+import ISaleIXC from '@modules/ixc/customers/details/sales/main/models/ISaleIXC';
 
 interface IRequest {
-  contract: IContractIXC;
+  sale: ISaleIXC;
 }
 
 @injectable()
-export default class OpenContractDetailsService {
+export default class OpenSaleDetailsService {
   constructor(
     @inject('Page')
     private page: Page,
   ) {}
 
-  public async execute({ contract }: IRequest): Promise<void> {
+  public async execute({ sale }: IRequest): Promise<void> {
     const [
       findCustomersWindowTitleElement,
     ] = await this.page.findElementsByText('Cliente', 'div[@class="ftitle"]');
@@ -28,9 +28,9 @@ export default class OpenContractDetailsService {
     }
 
     /* istanbul ignore next */
-    await this.page.evaluate(contractId => {
+    await this.page.evaluate(saleId => {
       const element = document.evaluate(
-        `//td[@abbr="cliente_contrato.id"]/div[contains(text(), '${contractId}')]/../..`,
+        `//td[@abbr="vd_saida.id"]/div[contains(text(), '${saleId}')]/../..`,
         document,
         null,
         XPathResult.FIRST_ORDERED_NODE_TYPE,
@@ -41,9 +41,9 @@ export default class OpenContractDetailsService {
       clickEvent.initEvent('dblclick', true, true);
 
       element.dispatchEvent(clickEvent);
-    }, contract.id);
+    }, sale.id);
 
-    await this.page.driver.waitForSelector('#contrato');
+    await this.page.driver.waitForSelector('#id_condicao_pagamento_label');
 
     await sleep(2000);
   }

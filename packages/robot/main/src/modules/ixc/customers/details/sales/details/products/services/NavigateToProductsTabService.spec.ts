@@ -5,15 +5,16 @@ import PuppeteerBrowserProvider from '@robot/shared/modules/browser/providers/Br
 import ixcConfig from '@config/ixc';
 import testingCustomersConfig from '@config/testing_customers';
 
-import ExtractContractListService from '@modules/ixc/customers/details/contract/main/services/ExtractContractListService';
-import NavigateToContractTabService from '@modules/ixc/customers/details/contract/main/services/NavigateToContractTabService';
 import OpenCustomerDetailsService from '@modules/ixc/customers/details/main/services/OpenCustomerDetailsService';
+import OpenSaleDetailsService from '@modules/ixc/customers/details/sales/details/main/services/OpenSaleDetailsService';
+import ExtractSalesListService from '@modules/ixc/customers/details/sales/main/services/ExtractSalesListService';
+import NavigateToSalesTabService from '@modules/ixc/customers/details/sales/main/services/NavigateToSalesTabService';
 import FindCustomerByFieldService from '@modules/ixc/customers/main/services/FindCustomerByFieldService';
 import NavigateToCustomersPageService from '@modules/ixc/customers/main/services/NavigateToCustomersPageService';
 import AuthenticateUserService from '@modules/ixc/login/services/AuthenticateUserService';
 import NavigateToLogInPageService from '@modules/ixc/login/services/NavigateToLogInPageService';
 
-import OpenContractDetailsService from './OpenContractDetailsService';
+import NavigateToProductsTabService from './NavigateToProductsTabService';
 
 let puppeteerBrowserProvider: PuppeteerBrowserProvider;
 let navigateToLogInPage: NavigateToLogInPageService;
@@ -21,14 +22,15 @@ let authenticateUser: AuthenticateUserService;
 let navigateToCustomersPage: NavigateToCustomersPageService;
 let findCustomerByField: FindCustomerByFieldService;
 let openCustomerDetails: OpenCustomerDetailsService;
-let navigateToContractTab: NavigateToContractTabService;
-let extractContractList: ExtractContractListService;
-let openContractDetails: OpenContractDetailsService;
+let navigateToSalesTab: NavigateToSalesTabService;
+let extractSalesList: ExtractSalesListService;
+let openSaleDetails: OpenSaleDetailsService;
+let navigateToProductsTab: NavigateToProductsTabService;
 
 let browser: Browser;
 let page: Page;
 
-describe('OpenContractDetails', () => {
+describe('NavigateToProductsTab', () => {
   beforeAll(async () => {
     puppeteerBrowserProvider = new PuppeteerBrowserProvider();
 
@@ -43,16 +45,17 @@ describe('OpenContractDetails', () => {
     navigateToCustomersPage = new NavigateToCustomersPageService(page);
     findCustomerByField = new FindCustomerByFieldService(page);
     openCustomerDetails = new OpenCustomerDetailsService(page);
-    navigateToContractTab = new NavigateToContractTabService(page);
-    extractContractList = new ExtractContractListService(page);
-    openContractDetails = new OpenContractDetailsService(page);
+    navigateToSalesTab = new NavigateToSalesTabService(page);
+    extractSalesList = new ExtractSalesListService(page);
+    openSaleDetails = new OpenSaleDetailsService(page);
+    navigateToProductsTab = new NavigateToProductsTabService(page);
   });
 
   afterAll(async () => {
     // await browser.close();
   });
 
-  it('should be able to open contract details', async () => {
+  it('should be able to navigate to products tab', async () => {
     await navigateToLogInPage.execute();
 
     const { email, password } = ixcConfig.testing.account;
@@ -73,10 +76,12 @@ describe('OpenContractDetails', () => {
 
     await openCustomerDetails.execute({ customer_id: customer.id });
 
-    await navigateToContractTab.execute();
+    await navigateToSalesTab.execute();
 
-    const [contract] = await extractContractList.execute();
+    const [sale] = await extractSalesList.execute();
 
-    await openContractDetails.execute({ contract });
+    await openSaleDetails.execute({ sale });
+
+    await navigateToProductsTab.execute();
   });
 });
