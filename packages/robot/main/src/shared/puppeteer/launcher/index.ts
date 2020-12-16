@@ -506,7 +506,7 @@ export default class Launcher {
                   await api.post('/logs', {
                     date: new Date(),
                     ixc_id: `${extendedCustomerIxc.id} - ${extendedCustomerIxc.name}`,
-                    projection_id: 'TODO',
+                    projection_id: `Contrato inexistente no Conta Azul (${linkedContract.ixc.id})`,
                     conta_azul_existing: true,
                     discharge_performed: false,
                   });
