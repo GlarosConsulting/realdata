@@ -67,7 +67,7 @@ describe('UpdateContract', () => {
 
     await navigateToContractsPage.execute();
 
-    const testingCustomer = testingCustomersConfig[2];
+    const testingCustomer = testingCustomersConfig[7];
 
     const [contract] = await findContractsByCustomerName.execute({
       name:
@@ -82,13 +82,10 @@ describe('UpdateContract', () => {
 
     const testingContract = testingCustomer.ixc.details.contracts[0];
 
-    await updateContract.execute(
-      {
-        products: formatIxcContractProductsToContaAzul(
-          testingContract.products.items,
-        ),
-      },
-      false,
-    );
+    await updateContract.execute({
+      products: formatIxcContractProductsToContaAzul(
+        testingContract.details.products.items,
+      ),
+    });
   });
 });

@@ -62,6 +62,8 @@ export default class UpdateContractService {
 
       for (let i = findProductRowsElements.length; i < products.length; i++) {
         await findAddNewProductRowElement.click();
+
+        await sleep(500);
       }
 
       findProductRowsElements = await this.page.findElementsBySelector(
@@ -124,6 +126,8 @@ export default class UpdateContractService {
           findProductUnitValueInputElement,
           String(product.unit_value).replace('.', ','),
         );
+
+        await sleep(500);
       }
     }
 

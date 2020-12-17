@@ -33,11 +33,15 @@ export default class ExtractContractDetailsService {
       throw new AppError('You should be in contract details page.');
     }
 
+    await sleep(500);
+
     const pageUrl = await this.page.driver.url();
 
     const splitPageUrl = pageUrl.split('/');
 
     const id = splitPageUrl[splitPageUrl.length - 1];
+
+    await sleep(500);
 
     /* istanbul ignore next */
     const extractedContractDetails = await this.page.evaluate<
@@ -115,7 +119,7 @@ export default class ExtractContractDetailsService {
 
     await this.page.driver.goBack();
 
-    await sleep(500);
+    await sleep(1000);
 
     const contractDetails: IContractDetailsContaAzul = {
       ...extractedContractDetails,
