@@ -16,5 +16,6 @@ export default interface IFinancialItemIXC {
   credit_date: Date;
   received_date: Date;
   type: string;
+  cancellation_date: Date;
   cancellation_reason: string;
 }

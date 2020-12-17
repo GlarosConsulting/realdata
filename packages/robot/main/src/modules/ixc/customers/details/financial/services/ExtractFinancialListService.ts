@@ -19,12 +19,14 @@ export interface IExtractFinancialIXC
     | 'payment_date'
     | 'credit_date'
     | 'received_date'
+    | 'cancellation_date'
   > {
   emission_date: string;
   due_date: string;
   payment_date: string;
   credit_date: string;
   received_date: string;
+  cancellation_date: string;
 }
 
 @injectable()
@@ -140,6 +142,10 @@ export default class ExtractFinancialListService {
             'td[abbr="fn_areceber.tipo_recebimento"] > div',
             row,
           );
+          const cancellation_date = getTextBySelector(
+            'td:nth-child(19) > div',
+            row,
+          );
           const cancellation_reason = getTextBySelector(
             'td:nth-child(20) > div',
             row,
@@ -165,6 +171,7 @@ export default class ExtractFinancialListService {
             credit_date,
             received_date,
             type,
+            cancellation_date,
             cancellation_reason,
           };
 
@@ -190,6 +197,7 @@ export default class ExtractFinancialListService {
       payment_date: parseDate(item.payment_date),
       credit_date: parseDate(item.credit_date),
       received_date: parseDate(item.received_date, 'dd/MM/yyyy HH:mm:ss'),
+      cancellation_date: parseDate(item.cancellation_date, 'dd/MM/yyyy'),
     }));
 
     return financial;

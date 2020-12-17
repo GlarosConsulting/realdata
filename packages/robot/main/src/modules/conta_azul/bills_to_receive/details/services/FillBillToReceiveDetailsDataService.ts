@@ -104,7 +104,7 @@ export default class FillBillToReceiveDetailsDataService {
 
     await this.page.typeToElement(
       findDiscountInputElement,
-      String(discount).replace('.', ','),
+      discount.toFixed(2).replace('.', ','),
     );
 
     await sleep(500);
@@ -115,17 +115,26 @@ export default class FillBillToReceiveDetailsDataService {
 
     await this.page.typeToElement(
       findInterestInputElement,
-      String(interest).replace('.', ','),
+      interest.toFixed(2).replace('.', ','),
     );
 
     await sleep(500);
 
     /* istanbul ignore next */
-    await this.page.evaluate(amountPaid => {
-      document.querySelector<HTMLInputElement>('#amountPaid').value = String(
-        amountPaid,
-      ).replace('.', ',');
-    }, paid);
+    await this.page.evaluate(() => {
+      document.querySelector<HTMLInputElement>('#amountPaid').value = '';
+    });
+
+    await sleep(500);
+
+    const [findAmountPaidInputElement] = await this.page.findElementsBySelector(
+      '#amountPaid',
+    );
+
+    await this.page.typeToElement(
+      findAmountPaidInputElement,
+      paid.toFixed(2).replace('.', ','),
+    );
 
     await sleep(500);
 

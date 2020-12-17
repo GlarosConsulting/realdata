@@ -61,7 +61,7 @@ describe('ExtractFinancialList', () => {
 
     await navigateToCustomersPage.execute();
 
-    const testingCustomerData = testingCustomersConfig[0];
+    const testingCustomerData = testingCustomersConfig[7];
 
     const customer = await findCustomerByField.execute({
       field: 'id',

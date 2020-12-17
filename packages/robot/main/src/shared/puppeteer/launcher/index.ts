@@ -6,6 +6,7 @@ import {
   isAfter,
   isBefore,
   isSameMonth,
+  isEqual as isDateEqual,
 } from 'date-fns';
 import { container, injectable, inject } from 'tsyringe';
 
@@ -343,6 +344,9 @@ export default class Launcher {
           });
         };
 
+        const contaAzulBillsToReceiveMainPage = new ContaAzulBillToReceiveMainPage();
+        const contaAzulBillsToReceiveDetailsPage = new ContaAzulBillsToReceiveDetailsPage();
+
         if (contaAzulActiveContracts.length === 0) {
           for (const ixcContract of ixcActiveContracts) {
             await createContract(ixcContract);
@@ -491,17 +495,24 @@ export default class Launcher {
           const contaAzulContractsUpdatePage = new ContaAzulContractsUpdatePage();
 
           for (const linkedContract of linkedContracts) {
+            const filterCanceledFinancial = linkedContract.ixc.details.financial.filter(
+              item =>
+                item.status.includes('Cancelado') &&
+                (item.cancellation_reason.includes('Downgrade') ||
+                  item.cancellation_reason.includes('Upgrade')),
+            );
+
+            let lastCanceledFinancial: IFinancialItemIXC;
+
+            if (filterCanceledFinancial.length > 0) {
+              lastCanceledFinancial =
+                filterCanceledFinancial[filterCanceledFinancial.length - 1];
+            }
+
             if (!linkedContract.conta_azul) {
               await createContract(linkedContract.ixc);
 
-              const checkHasCanceledFinancial = linkedContract.ixc.details.financial.some(
-                item =>
-                  item.status.includes('Cancelado') &&
-                  (item.cancellation_reason.includes('Downgrade') ||
-                    item.cancellation_reason.includes('Upgrade')),
-              );
-
-              if (checkHasCanceledFinancial) {
+              if (filterCanceledFinancial.length > 0) {
                 try {
                   await api.post('/logs', {
                     date: new Date(),
@@ -530,6 +541,101 @@ export default class Launcher {
                 products: contractProducts,
                 description: `ID Contrato IXC: ${linkedContract.ixc.id}`,
               });
+
+              await contaAzulBillsToReceiveMainPage.navigateTo();
+
+              const billsToReceive = await contaAzulBillsToReceiveMainPage.findByField(
+                {
+                  field: 'launch.customer_name',
+                  value: contaAzulCustomer.name,
+                },
+              );
+
+              for (const billToReceive of billsToReceive) {
+                const filterReceivedBills = linkedContract.ixc.details.financial.filter(
+                  receivedBill => {
+                    if (billToReceive.value !== lastCanceledFinancial.value) {
+                      return false;
+                    }
+
+                    const isEmissionEqualsToCancellationDate = isDateEqual(
+                      receivedBill.emission_date,
+                      lastCanceledFinancial.cancellation_date,
+                    );
+
+                    if (!isEmissionEqualsToCancellationDate) {
+                      return false;
+                    }
+
+                    const dateLessThreeDays = subDays(billToReceive.date, 3);
+                    const dateMoreThreeDays = addDays(billToReceive.date, 3);
+
+                    const isDateValid =
+                      isAfter(receivedBill.due_date, dateLessThreeDays) &&
+                      isBefore(receivedBill.due_date, dateMoreThreeDays);
+
+                    if (!isDateValid) {
+                      return false;
+                    }
+
+                    return true;
+                  },
+                );
+
+                const finance = filterReceivedBills[0];
+
+                if (finance.status !== 'Recebido') {
+                  continue;
+                }
+
+                await contaAzulBillsToReceiveDetailsPage.open({
+                  bill_to_receive_sell_id: billToReceive.sell_id,
+                });
+
+                if (finance.paid_value !== 0.01) {
+                  const interest = Number(
+                    (finance.paid_value - finance.value).toFixed(2),
+                  );
+
+                  await contaAzulBillsToReceiveDetailsPage.fillData({
+                    account: 'Sicoob Crediuna',
+                    value: finance.value,
+                    received_date: finance.received_date,
+                    discount: 0,
+                    interest,
+                    paid: finance.paid_value,
+                    transaction_id: finance.id,
+                    sell_id: finance.sell_id,
+                  });
+                } else {
+                  await contaAzulBillsToReceiveDetailsPage.fillData({
+                    account: 'Sicoob Crediuna',
+                    value: finance.value,
+                    received_date: finance.received_date,
+                    discount:
+                      Number((finance.paid_value - finance.value).toFixed(2)) *
+                      -1,
+                    interest: 0,
+                    paid: finance.paid_value,
+                    transaction_id: finance.id,
+                    sell_id: finance.sell_id,
+                  });
+
+                  try {
+                    await api.post('/logs', {
+                      date: new Date(),
+                      ixc_id: `${extendedCustomerIxc.id} - ${extendedCustomerIxc.name}`,
+                      projection_id: billToReceive.sell_id,
+                      conta_azul_existing: true,
+                      discharge_performed: true,
+                    });
+                  } catch {
+                    // ignore catch block
+                  }
+                }
+              }
+
+              await pages.conta_azul.driver.reload();
             } else if (!linkedContract.conta_azul?.details.description) {
               await contaAzulContractsUpdatePage.navigateTo(
                 linkedContract.conta_azul.details.id,
@@ -542,18 +648,14 @@ export default class Launcher {
           }
         }
 
-        const contaAzulBillToReceiveMainPage = new ContaAzulBillToReceiveMainPage();
+        await contaAzulBillsToReceiveMainPage.navigateTo();
 
-        await contaAzulBillToReceiveMainPage.navigateTo();
-
-        const billsToReceive = await contaAzulBillToReceiveMainPage.findByField(
+        const billsToReceive = await contaAzulBillsToReceiveMainPage.findByField(
           {
             field: 'launch.customer_name',
             value: contaAzulCustomer.name,
           },
         );
-
-        const contaAzulBillsToReceiveDetailsPage = new ContaAzulBillsToReceiveDetailsPage();
 
         for (const billToReceive of billsToReceive) {
           let addressChangeRequest: IContractAdditionalServiceItem;

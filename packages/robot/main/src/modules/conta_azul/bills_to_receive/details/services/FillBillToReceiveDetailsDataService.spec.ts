@@ -77,11 +77,11 @@ describe('FillBillToReceiveDetailsData', () => {
 
     await fillBillToReceiveDetailsData.execute({
       account: 'Sicoob Crediuna',
+      value: 133.49,
       received_date: testingFinance.received_date,
       discount: 0,
-      interest: testingFinance.paid_value - testingFinance.value,
-      value: 200.66,
-      paid: testingFinance.paid_value,
+      interest: 136.43 - 133.49,
+      paid: 136.43,
       transaction_id: testingFinance.id,
       sell_id: testingFinance.sell_id,
     });
