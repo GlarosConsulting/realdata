@@ -8,5 +8,6 @@ export default interface IExtendedContractIXC extends IContractIXC {
     products: IContractProducts;
     additional_services: IContractAdditionalServiceItem[];
     financial: IFinancialItemIXC[];
+    detached_financial: IFinancialItemIXC[];
   };
 }

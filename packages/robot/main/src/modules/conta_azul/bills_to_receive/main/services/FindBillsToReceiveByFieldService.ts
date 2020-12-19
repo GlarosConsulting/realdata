@@ -56,6 +56,8 @@ export default class FindBillsToReceiveByFieldService {
 
     await this.page.driver.waitForSelector(FIELDS[field]);
 
+    await sleep(1000);
+
     const [findInputElement] = await this.page.findElementsBySelector(
       FIELDS[field],
     );

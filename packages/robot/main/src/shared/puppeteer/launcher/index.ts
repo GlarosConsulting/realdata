@@ -41,6 +41,7 @@ import CustomersDetailsAddressIXCPage from '@modules/ixc/customers/details/addre
 import CustomersDetailsContactIXCPage from '@modules/ixc/customers/details/contact/infra/puppeteer/pages/CustomersDetailsContactIXCPage';
 import CustomersDetailsContractDetailsAdditionalServicesIXCPage from '@modules/ixc/customers/details/contract/details/additional_services/infra/puppeteer/pages/CustomersDetailsContractDetailsAdditionalServicesIXCPage';
 import IContractAdditionalServiceItem from '@modules/ixc/customers/details/contract/details/additional_services/models/IContractAdditionalServiceItem';
+import CustomersDetailsContractDetailsDetachedFinancialIXCPage from '@modules/ixc/customers/details/contract/details/detached_financial/infra/puppeteer/pages/CustomersDetailsContractDetailsDetachedFinancialIXCPage';
 import CustomersDetailsContractDetailsFinancialIXCPage from '@modules/ixc/customers/details/contract/details/financial/infra/puppeteer/pages/CustomersDetailsContractDetailsFinancialIXCPage';
 import CustomersDetailsContractDetailsMainIXCPage from '@modules/ixc/customers/details/contract/details/main/infra/puppeteer/pages/CustomersDetailsContractDetailsMainIXCPage';
 import CustomersDetailsContractDetailsProductsIXCPage from '@modules/ixc/customers/details/contract/details/products/infra/puppeteer/pages/CustomersDetailsContractDetailsProductsIXCPage';
@@ -106,6 +107,7 @@ export default class Launcher {
       const customersDetailsContractDetailsProductsIxcPage = new CustomersDetailsContractDetailsProductsIXCPage();
       const customersDetailsContractDetailsAdditionalServicesIxcPage = new CustomersDetailsContractDetailsAdditionalServicesIXCPage();
       const customersDetailsContractDetailsFinancialIxcPage = new CustomersDetailsContractDetailsFinancialIXCPage();
+      const customersDetailsContractDetailsDetachedFinancialIxcPage = new CustomersDetailsContractDetailsDetachedFinancialIXCPage();
 
       const ixcCustomer = await customersMainIxcPage.findByField({
         field: 'id',
@@ -160,12 +162,17 @@ export default class Launcher {
 
         const financial = await customersDetailsContractDetailsFinancialIxcPage.getAll();
 
+        await customersDetailsContractDetailsDetachedFinancialIxcPage.navigateTo();
+
+        const detachedFinancial = await customersDetailsContractDetailsDetachedFinancialIxcPage.getAll();
+
         extendedIxcContracts.push({
           ...ixcContract,
           details: {
             products: productData,
             additional_services: additionalServices,
             financial,
+            detached_financial: detachedFinancial,
           },
         });
 
@@ -584,13 +591,18 @@ export default class Launcher {
 
                 const finance = filterReceivedBills[0];
 
-                if (finance.status !== 'Recebido') {
-                  continue;
-                }
-
                 await contaAzulBillsToReceiveDetailsPage.open({
                   bill_to_receive_sell_id: billToReceive.sell_id,
                 });
+
+                if (finance.status !== 'Recebido') {
+                  await contaAzulBillsToReceiveDetailsPage.fillData({
+                    account: 'Sicoob Crediuna',
+                    value: finance.value,
+                  });
+
+                  continue;
+                }
 
                 if (finance.paid_value !== 0.01) {
                   const interest = Number(
@@ -929,6 +941,8 @@ export default class Launcher {
     // const ixcIds = ['10930']; // Luis Otavio Soares de Andrade
     // const ixcIds = ['11559']; // Thiago de Queiroz
     const ixcIds = ['10941']; // Dayane Mendes da Silva Nascimento
+    // const ixcIds = ['14348']; // Rossi
+    // const ixcIds = ['14344']; // Wynderson
 
     // const ixcIds: string[] = [];
 

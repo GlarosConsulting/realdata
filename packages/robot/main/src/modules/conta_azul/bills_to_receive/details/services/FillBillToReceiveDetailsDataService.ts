@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { isUndefined } from 'lodash';
 import { injectable, inject } from 'tsyringe';
 
 import AppError from '@robot/shared/errors/AppError';
@@ -57,6 +58,8 @@ export default class FillBillToReceiveDetailsDataService {
       document.querySelector<HTMLInputElement>('#newIdConta').value = '';
     });
 
+    await sleep(1000);
+
     const [findAccountInputElement] = await this.page.findElementsBySelector(
       '#newIdConta',
     );
@@ -69,85 +72,110 @@ export default class FillBillToReceiveDetailsDataService {
 
     await sleep(1000);
 
-    if (value !== undefined) {
+    if (!isUndefined(value)) {
       /* istanbul ignore next */
-      await this.page.evaluate(evaluatedValue => {
-        document.querySelector<HTMLInputElement>('#valor').value = String(
-          evaluatedValue,
-        ).replace('.', ',');
-      }, value);
+      await this.page.evaluate(() => {
+        document.querySelector<HTMLInputElement>('#valor').value = '';
+      });
+
+      await sleep(1000);
+
+      const [findValueInputElement] = await this.page.findElementsBySelector(
+        '#valor',
+      );
+
+      await this.page.typeToElement(
+        findValueInputElement,
+        value.toFixed(2).replace('.', ','),
+      );
 
       await sleep(1000);
     }
 
-    const [
-      findReceivedCheckboxElement,
-    ] = await this.page.findElementsBySelector(
-      '#formStatement > div.casual-values.showing > div:nth-child(3) > div.act-now-show-in-simplified-conciliation > label:nth-child(4) > div > span.checkbox.baixado',
-    );
+    if (
+      !isUndefined(received_date) &&
+      !isUndefined(discount) &&
+      !isUndefined(interest) &&
+      !isUndefined(paid) &&
+      !isUndefined(transaction_id) &&
+      !isUndefined(sell_id)
+    ) {
+      const [
+        findReceivedCheckboxElement,
+      ] = await this.page.findElementsBySelector(
+        '#formStatement > div.casual-values.showing > div:nth-child(3) > div.act-now-show-in-simplified-conciliation > label:nth-child(4) > div > span.checkbox.baixado',
+      );
 
-    await findReceivedCheckboxElement.click();
+      await findReceivedCheckboxElement.click();
 
-    await sleep(1000);
+      await sleep(1000);
 
-    /* istanbul ignore next */
-    await this.page.evaluate(formattedDate => {
-      document.querySelector<HTMLInputElement>(
-        '#dtBaixa',
-      ).value = formattedDate;
-    }, format(received_date, 'dd/MM/yyyy'));
-    await sleep(1000);
+      /* istanbul ignore next */
+      await this.page.evaluate(formattedDate => {
+        document.querySelector<HTMLInputElement>(
+          '#dtBaixa',
+        ).value = formattedDate;
+      }, format(received_date, 'dd/MM/yyyy'));
+      await sleep(1000);
 
-    const [findDiscountInputElement] = await this.page.findElementsBySelector(
-      '#discount',
-    );
+      const [findDiscountInputElement] = await this.page.findElementsBySelector(
+        '#discount',
+      );
 
-    await this.page.typeToElement(
-      findDiscountInputElement,
-      discount.toFixed(2).replace('.', ','),
-    );
+      await this.page.typeToElement(
+        findDiscountInputElement,
+        discount.toFixed(2).replace('.', ','),
+      );
 
-    await sleep(500);
+      await sleep(500);
 
-    const [findInterestInputElement] = await this.page.findElementsBySelector(
-      '#interest',
-    );
+      const [findInterestInputElement] = await this.page.findElementsBySelector(
+        '#interest',
+      );
 
-    await this.page.typeToElement(
-      findInterestInputElement,
-      interest.toFixed(2).replace('.', ','),
-    );
+      await this.page.typeToElement(
+        findInterestInputElement,
+        interest.toFixed(2).replace('.', ','),
+      );
 
-    await sleep(500);
+      await sleep(500);
 
-    /* istanbul ignore next */
-    await this.page.evaluate(() => {
-      document.querySelector<HTMLInputElement>('#amountPaid').value = '';
-    });
+      /* istanbul ignore next */
+      await this.page.evaluate(() => {
+        document.querySelector<HTMLInputElement>('#amountPaid').value = '';
+      });
 
-    await sleep(500);
+      await sleep(500);
 
-    const [findAmountPaidInputElement] = await this.page.findElementsBySelector(
-      '#amountPaid',
-    );
+      const [
+        findAmountPaidInputElement,
+      ] = await this.page.findElementsBySelector('#amountPaid');
 
-    await this.page.typeToElement(
-      findAmountPaidInputElement,
-      paid.toFixed(2).replace('.', ','),
-    );
+      await this.page.typeToElement(
+        findAmountPaidInputElement,
+        paid.toFixed(2).replace('.', ','),
+      );
 
-    await sleep(500);
+      await sleep(500);
 
-    const [
-      findObservationsInputElement,
-    ] = await this.page.findElementsBySelector('#observacao');
+      /* istanbul ignore next */
+      await this.page.evaluate(() => {
+        document.querySelector<HTMLInputElement>('#observacao').value = '';
+      });
 
-    await this.page.typeToElement(
-      findObservationsInputElement,
-      `ID transação: ${transaction_id} e ID venda: ${sell_id}`,
-    );
+      await sleep(500);
 
-    await sleep(1000);
+      const [
+        findObservationsInputElement,
+      ] = await this.page.findElementsBySelector('#observacao');
+
+      await this.page.typeToElement(
+        findObservationsInputElement,
+        `ID transação: ${transaction_id} e ID venda: ${sell_id}`,
+      );
+
+      await sleep(1000);
+    }
 
     if (!dontSave) {
       const [findSaveButtonElement] = await this.page.findElementsBySelector(
