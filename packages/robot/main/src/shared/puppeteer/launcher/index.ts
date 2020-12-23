@@ -829,8 +829,10 @@ export default class Launcher {
     };
 
     const run = async (ixcIds: string[], currentIxcId?: string) => {
+      let browser: Browser;
+
       try {
-        const browser = await this.browserProvider.launch({ headless });
+        browser = await this.browserProvider.launch({ headless });
 
         const page1 = await browser.newPage();
         const page2 = await browser.newPage();
@@ -870,8 +872,6 @@ export default class Launcher {
             });
           } catch (err) {
             if (err instanceof ProcessingContaAzulError) {
-              await browser.close();
-
               throw err;
             }
           }
@@ -881,6 +881,8 @@ export default class Launcher {
 
         await browser.close();
       } catch (err) {
+        await browser.close();
+
         const ixcId = await this.cacheProvider.recover<string>('last-ixc-id');
 
         const indexOf = ixcIds.findIndex(id => id === ixcId);

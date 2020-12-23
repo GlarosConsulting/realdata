@@ -28,6 +28,7 @@
   "scripts": {
     "heroku-postbuild": "yarn audit:server build",
     "build": "lerna run build --scope @realdata/* --stream",
+    "build:robot": "lerna run build --scope @realdata/robot-* --stream",
     "lint:fix": "eslint --fix packages --ext ts,tsx",
     "test": "lerna run test --scope @realdata/audit-* --stream --parallel -- --watchAll false",
     "audit:web": "yarn workspace @realdata/audit-web",
