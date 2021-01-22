@@ -13,6 +13,13 @@ import api from '@/services/api';
 
 type ILogsResponse = ILog[];
 
+interface ICreateLogDTO {
+  date: string;
+  ixc_id: string;
+  projection_id: string;
+  conta_azul_existing: boolean;
+  discharge_performed: boolean;
+}
 interface IPerformDischargeDTO {
   log_id: string;
   discharge_performed: boolean;
@@ -20,6 +27,7 @@ interface IPerformDischargeDTO {
 
 interface ICustomersIXCContextData {
   logs: ILog[];
+  createLog(data: ICreateLogDTO): Promise<ILog>;
   performDischarge(log: ILog): Promise<void>;
 }
 
@@ -46,6 +54,19 @@ const LogsProvider: React.FC = ({ children }) => {
     loadLogs();
   }, []);
 
+  const createLog = useCallback(
+    async (data: ICreateLogDTO): Promise<ILog> => {
+      const response = await api.post<ILog>('/logs', data);
+
+      const log = response.data;
+
+      setLogs([...logs, log]);
+
+      return log;
+    },
+    [logs],
+  );
+
   const performDischarge = useCallback(async (log: ILog): Promise<void> => {
     const response = await api.patch<ILog>(
       `/logs/${log.id}/discharge-performed`,
@@ -62,7 +83,7 @@ const LogsProvider: React.FC = ({ children }) => {
   }, []);
 
   return (
-    <LogsContext.Provider value={{ logs, performDischarge }}>
+    <LogsContext.Provider value={{ logs, createLog, performDischarge }}>
       {children}
     </LogsContext.Provider>
   );

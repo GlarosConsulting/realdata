@@ -1,11 +1,20 @@
 import { useRouter } from 'next/router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { FiUsers } from 'react-icons/fi';
+import { FiPlus, FiUsers } from 'react-icons/fi';
 import { Column } from 'react-table';
 
-import { Box, Button, Input, Text, Tooltip, useTheme } from '@chakra-ui/core';
+import {
+  Box,
+  Button,
+  Input,
+  Text,
+  Tooltip,
+  useDisclosure,
+  useTheme,
+} from '@chakra-ui/core';
 import { format, parseISO } from 'date-fns';
 
+import CreateLogModal from '@/components/_pages/app/logs/CreateLogModal';
 import SEO from '@/components/SEO';
 import Sidebar from '@/components/Sidebar';
 import Table from '@/components/Table';
@@ -47,6 +56,12 @@ const Logs: React.FC = () => {
 
   const router = useRouter();
 
+  const {
+    isOpen: isCreateLogOpen,
+    onOpen: onOpenCreateLog,
+    onClose: onCloseCreateLog,
+  } = useDisclosure();
+
   const { logs, performDischarge } = useLogs();
 
   const [filteredLogs, setFilteredLogs] = useState(logs);
@@ -69,9 +84,9 @@ const Logs: React.FC = () => {
     [],
   );
 
-  const formattedLogs = useMemo(() => formatLogs(filteredLogs) || [], [
-    filteredLogs,
-  ]);
+  const handleOpenCreateLogModal = useCallback(() => {
+    onOpenCreateLog();
+  }, []);
 
   useEffect(() => {
     setFilteredLogs(logs);
@@ -113,6 +128,10 @@ const Logs: React.FC = () => {
     [],
   );
 
+  const formattedLogs = useMemo(() => formatLogs(filteredLogs) || [], [
+    filteredLogs,
+  ]);
+
   return (
     <>
       <SEO
@@ -140,6 +159,25 @@ const Logs: React.FC = () => {
             </Button>
           </Tooltip>
         }
+        middle={
+          <Tooltip
+            label="Adicionar novo cliente do IXC"
+            aria-label="Adicionar novo cliente do IXC"
+          >
+            <Button
+              bg="green.400"
+              padding={1}
+              borderRadius="50%"
+              marginTop={16}
+              _hover={{
+                bg: 'green.300',
+              }}
+              onClick={handleOpenCreateLogModal}
+            >
+              <FiPlus size={theme.sizes[8]} color={theme.colors.white} />
+            </Button>
+          </Tooltip>
+        }
       />
 
       <Box as="main" marginLeft={24} marginY={6} paddingRight={8}>
@@ -161,6 +199,8 @@ const Logs: React.FC = () => {
           <Table columns={COLUMNS} data={formattedLogs} />
         </Box>
       </Box>
+
+      <CreateLogModal isOpen={isCreateLogOpen} onClose={onCloseCreateLog} />
     </>
   );
 };
